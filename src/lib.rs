@@ -356,3 +356,42 @@ impl<V: Validator, const MAX: usize, const ASCII_ONLY: bool> Default
         }
     }
 }
+
+// --------------
+// MUTATION APIs
+// --------------
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    GString<V, MIN, MAX, ASCII_ONLY>
+{
+    pub fn push(&mut self, ch: char) -> Result<(), GStringError<V::Err>> {
+        // char takes up to 4 bytes
+        let mut buf = [0u8; 4];
+        let encoded = ch.encode_utf8(&mut buf);
+
+        self.push_str(encoded)
+    }
+
+    pub fn push_str(&mut self, s: &str) -> Result<(), GStringError<V::Err>> {
+        let mut buf = [0u8; MAX];
+
+        // copy current content
+        buf[..self.len].copy_from_slice(&self.buf[..self.len]);
+
+        // append new content
+        let bytes = s.as_bytes();
+        let end = self.len + bytes.len();
+
+        buf[self.len..end].copy_from_slice(bytes);
+
+        // SAFETY:
+        // existing bytes are valid UTF-8
+        // appended bytes come from &str
+        // concatenation of valid UTF-8 is valid UTF-8
+        let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..end]) };
+
+        // fully revalidate through centralized constructor
+        *self = Self::new(candidate)?;
+
+        Ok(())
+    }
+}

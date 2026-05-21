@@ -143,6 +143,38 @@ impl<LHSV: Validator, RHSV: Validator, const MIN: usize, const MAX: usize, const
     }
 }
 
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> PartialEq<str>
+    for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    fn eq(&self, other: &str) -> bool {
+        self.as_str() == other
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> PartialEq<&str>
+    for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    fn eq(&self, other: &&str) -> bool {
+        self.as_str() == *other
+    }
+}
+
+impl<V: Validator + Eq, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> Ord
+    for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.as_str().cmp(other.as_str())
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> PartialOrd
+    for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> AsRef<str>
     for GString<V, MIN, MAX, ASCII_ONLY>
 {
@@ -171,5 +203,49 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> D
             MAX,
             ASCII_ONLY
         )
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    From<GString<V, MIN, MAX, ASCII_ONLY>> for String
+{
+    fn from(value: GString<V, MIN, MAX, ASCII_ONLY>) -> Self {
+        value.as_str().to_owned()
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> std::ops::Deref
+    for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.as_str()
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    std::borrow::Borrow<str> for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> std::hash::Hash
+    for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.as_str().hash(state)
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> TryFrom<&str>
+    for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    type Error = Err;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::from_str(value)
     }
 }

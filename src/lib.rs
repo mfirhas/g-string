@@ -70,7 +70,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     }
 
     #[inline]
-    fn new(s: &str) -> Result<Self, Err> {
+    pub fn new(s: &str) -> Result<Self, Err> {
         Self::stack_allocate(s)?
             .check_bounds()?
             .check_ascii()?

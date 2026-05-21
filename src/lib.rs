@@ -220,7 +220,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
     #[inline]
     pub const fn is_empty(&self) -> bool {
-        self.buf.is_empty()
+        self.len == 0
     }
 
     #[inline]

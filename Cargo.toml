@@ -5,4 +5,9 @@ edition = "2024"
 description = "Generic String"
 license = "MIT"
 
+[features]
+default = ["std"]
+std = ["alloc"]
+alloc = []
+
 [dependencies]

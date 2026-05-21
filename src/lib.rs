@@ -1,5 +1,11 @@
 #![doc = include_str!("../README.md")]
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
+#[cfg(feature = "alloc")]
+use alloc::{borrow::ToOwned, string::String};
 
 mod macros;
 
@@ -284,13 +290,14 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> D
     }
 }
 
-// impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
-//     From<GString<V, MIN, MAX, ASCII_ONLY>> for String
-// {
-//     fn from(value: GString<V, MIN, MAX, ASCII_ONLY>) -> Self {
-//         value.as_str().to_owned()
-//     }
-// }
+#[cfg(feature = "alloc")]
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    From<GString<V, MIN, MAX, ASCII_ONLY>> for String
+{
+    fn from(value: GString<V, MIN, MAX, ASCII_ONLY>) -> Self {
+        value.as_str().to_owned()
+    }
+}
 
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> core::ops::Deref
     for GString<V, MIN, MAX, ASCII_ONLY>

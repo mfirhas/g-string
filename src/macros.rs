@@ -1,32 +1,3 @@
-use crate::{GString, Validator};
-
-impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
-    GString<V, MIN, MAX, ASCII_ONLY>
-{
-    #[doc(hidden)]
-    pub const fn __constant(s: &str) -> Self {
-        let stack = Self::stack_allocate(s);
-        let ret = match stack {
-            Ok(stack_allocated) => {
-                let check_bounds = stack_allocated.check_bounds();
-                match check_bounds {
-                    Ok(bounds_checked) => {
-                        let check_ascii = bounds_checked.check_ascii();
-                        match check_ascii {
-                            Ok(ascii_checked) => ascii_checked,
-                            Err(err) => panic!("{}", err),
-                        }
-                    }
-                    Err(err) => panic!("{}", err),
-                }
-            }
-            Err(err) => panic!("{}", err),
-        };
-
-        ret
-    }
-}
-
 #[macro_export]
 macro_rules! gstring {
     ($s:literal) => {
@@ -57,7 +28,7 @@ macro_rules! gstring {
     };
     ($s:literal, $validator:ty, $min:expr, $max:expr, $ascii_only:expr) => {{
         const RET: $crate::GString<$validator, $min, $max, $ascii_only> =
-            $crate::GString::<$validator, $min, $max, $ascii_only>::__constant($s);
+            $crate::GString::<$validator, $min, $max, $ascii_only>::__new($s);
         RET
     }};
 }

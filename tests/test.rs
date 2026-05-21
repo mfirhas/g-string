@@ -2,7 +2,7 @@ use g_string::{NoValidation, gstring};
 
 #[test]
 fn test_g_string() {
-    let _ret = gstring!("wdd", NoValidation, 2, 3).validate().unwrap();
+    let _ret = gstring!("wd", NoValidation, 2, 3).validate().unwrap();
     dbg!(&_ret);
     println!("{}", _ret);
     let _ret = gstring!(

@@ -5,7 +5,25 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 {
     #[doc(hidden)]
     pub const fn __constant(s: &str) -> Self {
-        Self::build(s).comptime_check()
+        let stack = Self::stack_allocate(s);
+        let ret = match stack {
+            Ok(stack_allocated) => {
+                let check_bounds = stack_allocated.check_bounds();
+                match check_bounds {
+                    Ok(bounds_checked) => {
+                        let check_ascii = bounds_checked.check_ascii();
+                        match check_ascii {
+                            Ok(ascii_checked) => ascii_checked,
+                            Err(err) => panic!("{}", err),
+                        }
+                    }
+                    Err(err) => panic!("{}", err),
+                }
+            }
+            Err(err) => panic!("{}", err),
+        };
+
+        ret
     }
 }
 

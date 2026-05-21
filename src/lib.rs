@@ -54,7 +54,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> F
     type Err = Err;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::from_str(s)
+        Self::new(s)
     }
 }
 
@@ -70,13 +70,20 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     }
 
     #[inline]
-    fn from_str(s: &str) -> Result<Self, Err> {
-        Self::build(s).runtime_check()
+    fn new(s: &str) -> Result<Self, Err> {
+        Self::stack_allocate(s)?
+            .check_bounds()?
+            .check_ascii()?
+            .validate()
     }
 
-    const fn build(s: &str) -> Self {
+    const fn stack_allocate(s: &str) -> Result<Self, &'static str> {
         let bytes = s.as_bytes();
         let len = bytes.len();
+
+        if len > MAX {
+            return Err("string len is bigger than MAX");
+        }
 
         let mut buf = [0u8; MAX];
         let mut i = 0;
@@ -85,65 +92,45 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             i += 1;
         }
 
-        Self {
+        Ok(Self {
             buf,
             len,
             _validator: std::marker::PhantomData,
-        }
+        })
     }
 
-    #[inline(always)]
-    pub fn validate(&self) -> Result<Self, Err> {
-        V::validate(self.as_str())?;
+    #[inline]
+    const fn check_bounds(&self) -> Result<Self, &'static str> {
+        assert!(MIN <= MAX, "MIN cannot be bigger than MAX");
+        if self.len < MIN {
+            return Err(ERR_LEN_MIN);
+        }
+        if self.len > MAX {
+            return Err(ERR_LEN_MAX);
+        }
+
         Ok(*self)
     }
 
-    const fn comptime_check(&self) -> Self {
-        // check length
-        assert!(MIN <= MAX, "MIN cannot be bigger than MAX");
-        assert!(self.len >= MIN, "string len cannot be smaller than MIN");
-        assert!(self.len <= MAX, "string len cannot be bigger than MAX");
-
-        // check ascii only
-        if ASCII_ONLY {
-            let mut i = 0;
-            while i < self.len {
-                // If a byte is >= 128, it's a multi-byte UTF-8 character (not ASCII)
-                assert!(self.buf[i] < 128, "ASCII_ONLY is true, but not ascii");
-                i += 1;
-            }
-        }
-
-        *self
-    }
-
-    fn runtime_check(&self) -> Result<Self, Err> {
-        // check length
-        const {
-            assert!(MIN <= MAX, "MIN cannot be bigger than MAX");
-        }
-        if self.len < MIN {
-            return Err(ERR_LEN_MIN.into());
-        }
-        if self.len > MAX {
-            return Err(ERR_LEN_MAX.into());
-        }
-
-        // check ascii only
+    #[inline]
+    const fn check_ascii(&self) -> Result<Self, &'static str> {
         if ASCII_ONLY {
             let mut i = 0;
             while i < self.len {
                 // If a byte is >= 128, it's a multi-byte UTF-8 character (not ASCII)
                 if self.buf[i] >= 128 {
-                    return Err(ERR_NOT_ASCII.into());
+                    return Err(ERR_NOT_ASCII);
                 }
                 i += 1;
             }
         }
 
-        // check validation
-        self.validate()?;
+        Ok(*self)
+    }
 
+    #[inline(always)]
+    pub fn validate(&self) -> Result<Self, Err> {
+        V::validate(self.as_str())?;
         Ok(*self)
     }
 }
@@ -152,7 +139,7 @@ impl<LHSV: Validator, RHSV: Validator, const MIN: usize, const MAX: usize, const
     PartialEq<GString<RHSV, MIN, MAX, ASCII_ONLY>> for GString<LHSV, MIN, MAX, ASCII_ONLY>
 {
     fn eq(&self, other: &GString<RHSV, MIN, MAX, ASCII_ONLY>) -> bool {
-        self.len == other.len && self.buf == other.buf
+        self.len == other.len && self.buf[..self.len] == other.buf[..other.len]
     }
 }
 

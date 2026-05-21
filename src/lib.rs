@@ -208,12 +208,22 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         }
     }
 
+    #[inline]
+    pub const fn as_bytes(&self) -> &[u8] {
+        &self.buf
+    }
+
+    #[inline]
     pub const fn len(&self) -> usize {
         self.len
     }
+
+    #[inline]
     pub const fn is_empty(&self) -> bool {
         self.buf.is_empty()
     }
+
+    #[inline]
     pub const fn capacity(&self) -> usize {
         MAX
     }

@@ -118,14 +118,6 @@ macro_rules! errpanic {
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, MIN, MAX, ASCII_ONLY>
 {
-    pub const fn as_str(&self) -> &str {
-        // UNSAFE: this is to avoid dealing with fallible function, also the bytes are always created from UTF-8 string.
-        unsafe {
-            let slice = core::slice::from_raw_parts(self.buf.as_ptr(), self.len);
-            core::str::from_utf8_unchecked(slice)
-        }
-    }
-
     #[doc(hidden)]
     pub const fn __new(s: &str) -> Self {
         let ret = errpanic!(Self::stack_allocate(s));
@@ -200,6 +192,14 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     pub fn validate(&self) -> Result<Self, GStringError<V::Err>> {
         V::validate(self.as_str()).map_err(GStringError::Validation)?;
         Ok(*self)
+    }
+
+    pub const fn as_str(&self) -> &str {
+        // UNSAFE: this is to avoid dealing with fallible function, also the bytes are always created from UTF-8 string.
+        unsafe {
+            let slice = core::slice::from_raw_parts(self.buf.as_ptr(), self.len);
+            core::str::from_utf8_unchecked(slice)
+        }
     }
 
     pub const fn len(&self) -> usize {

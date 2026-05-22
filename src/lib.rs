@@ -651,7 +651,11 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         let middle = replace_with.as_bytes();
         let after = &self.buf[end..self.len];
 
-        let new_len = before.len() + middle.len() + after.len();
+        let new_len = before
+            .len()
+            .checked_add(middle.len())
+            .and_then(|n| n.checked_add(after.len()))
+            .ok_or(GStringError::TooLong)?;
 
         if new_len > MAX {
             return Err(GStringError::TooLong);

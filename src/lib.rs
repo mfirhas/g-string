@@ -123,6 +123,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(self)
     }
 
+    #[inline]
     pub const fn as_str(&self) -> &str {
         // UNSAFE: this is to avoid dealing with fallible function, also the bytes are always created from UTF-8 string.
         unsafe {
@@ -183,6 +184,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> c
 {
     type Target = str;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         self.as_str()
     }
@@ -191,6 +193,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> c
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     core::borrow::Borrow<str> for GString<V, MIN, MAX, ASCII_ONLY>
 {
+    #[inline]
     fn borrow(&self) -> &str {
         self.as_str()
     }
@@ -199,6 +202,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> core::hash::Hash
     for GString<V, MIN, MAX, ASCII_ONLY>
 {
+    #[inline]
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.as_str().hash(state)
     }
@@ -207,6 +211,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> c
 impl<V: Validator, const MAX: usize, const ASCII_ONLY: bool> Default
     for GString<V, 0, MAX, ASCII_ONLY>
 {
+    #[inline]
     fn default() -> Self {
         Self {
             buf: [0u8; MAX],

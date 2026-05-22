@@ -8,7 +8,6 @@ mod iterator;
 mod macros;
 mod mutation;
 mod order;
-mod query;
 
 use error::{Err, GStringError};
 

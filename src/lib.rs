@@ -4,6 +4,7 @@
 mod conversion;
 mod equality;
 mod error;
+mod iterator;
 mod macros;
 mod mutation;
 mod order;

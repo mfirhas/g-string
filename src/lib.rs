@@ -7,8 +7,10 @@ extern crate alloc;
 #[cfg(feature = "alloc")]
 use alloc::{borrow::ToOwned, string::String};
 
+mod error;
 mod macros;
 mod mutation;
+use error::{Err, GStringError};
 
 use core::{
     convert::Infallible,
@@ -21,72 +23,6 @@ use core::{
 pub const DEFAULT_MIN: usize = 0;
 pub const DEFAULT_MAX: usize = 255;
 pub const DEFAULT_ASCII_ONLY: bool = false;
-
-#[non_exhaustive]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Err {
-    TooShort,
-    TooLong,
-    NotAscii,
-}
-
-impl Display for Err {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::TooShort => {
-                write!(f, "string len is smaller than MIN")
-            }
-            Self::TooLong => {
-                write!(f, "string len is bigger than MAX")
-            }
-            Self::NotAscii => {
-                write!(f, "ASCII_ONLY is true, but not ascii")
-            }
-        }
-    }
-}
-
-impl Error for Err {}
-
-impl<VE> From<Err> for GStringError<VE> {
-    fn from(value: Err) -> Self {
-        match value {
-            Err::TooShort => Self::TooShort,
-            Err::TooLong => Self::TooLong,
-            Err::NotAscii => Self::NotAscii,
-        }
-    }
-}
-
-#[non_exhaustive]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GStringError<VE> {
-    TooShort,
-    TooLong,
-    NotAscii,
-    Validation(VE),
-    Mutation(&'static str),
-}
-
-impl<VE: Display + Debug> Display for GStringError<VE> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::TooShort => {
-                write!(f, "string len is smaller than MIN")
-            }
-            Self::TooLong => {
-                write!(f, "string len is bigger than MAX")
-            }
-            Self::NotAscii => {
-                write!(f, "ASCII_ONLY is true, but not ascii")
-            }
-            Self::Validation(err) => write!(f, "validation error: {}", err),
-            Self::Mutation(err) => write!(f, "mutation error: {}", err),
-        }
-    }
-}
-
-impl<VE: Display + Debug> Error for GStringError<VE> {}
 
 pub trait Validator: Copy {
     type Err: Error + Send + Sync + 'static;

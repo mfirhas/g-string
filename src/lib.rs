@@ -284,11 +284,19 @@ impl<V: Validator + Eq, const MIN: usize, const MAX: usize, const ASCII_ONLY: bo
     }
 }
 
-impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> PartialOrd
-    for GString<V, MIN, MAX, ASCII_ONLY>
+impl<
+    LHSV: Validator + Eq,
+    RHSV: Validator + Eq,
+    const MIN: usize,
+    const MAX: usize,
+    const ASCII_ONLY: bool,
+> PartialOrd<GString<RHSV, MIN, MAX, ASCII_ONLY>> for GString<LHSV, MIN, MAX, ASCII_ONLY>
 {
-    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-        Some(self.cmp(other))
+    fn partial_cmp(
+        &self,
+        other: &GString<RHSV, MIN, MAX, ASCII_ONLY>,
+    ) -> Option<core::cmp::Ordering> {
+        Some(self.as_str().cmp(other.as_str()))
     }
 }
 
@@ -452,8 +460,11 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         // inserted bytes
         buf[idx..idx + insert_len].copy_from_slice(insert_bytes);
 
+        let tail_len = self.len - idx;
+
         // after insertion point
-        buf[idx + insert_len..new_len].copy_from_slice(&self.buf[idx..self.len]);
+        buf[idx + insert_len..idx + insert_len + tail_len]
+            .copy_from_slice(&self.buf[idx..self.len]);
 
         // SAFETY:
         // - original bytes are valid UTF-8
@@ -557,7 +568,9 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(())
     }
 
+    #[cfg(feature = "alloc")]
     pub fn replace(&mut self, from: &str, to: &str) -> Result<(), GStringError<V::Err>> {
+        // .replace requires allocation
         let replaced = self.as_str().replace(from, to);
 
         *self = Self::new(&replaced)?;

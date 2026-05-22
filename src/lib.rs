@@ -64,6 +64,7 @@ pub enum GStringError<VE> {
     TooLong,
     NotAscii,
     Validation(VE),
+    Mutation(&'static str),
 }
 
 impl<VE: Display + Debug> Display for GStringError<VE> {
@@ -79,6 +80,7 @@ impl<VE: Display + Debug> Display for GStringError<VE> {
                 write!(f, "ASCII_ONLY is true, but not ascii")
             }
             Self::Validation(err) => write!(f, "validation error: {}", err),
+            Self::Mutation(err) => write!(f, "mutation error: {}", err),
         }
     }
 }
@@ -424,11 +426,9 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     }
 
     pub fn insert_str(&mut self, idx: usize, string: &str) -> Result<(), GStringError<V::Err>> {
-        // same behavior as String
-        assert!(
-            self.as_str().is_char_boundary(idx),
-            "idx is not a char boundary"
-        );
+        if !self.as_str().is_char_boundary(idx) {
+            return Err(GStringError::Mutation("idx is not a char boundary"));
+        }
 
         let insert_bytes = string.as_bytes();
         let insert_len = insert_bytes.len();
@@ -459,6 +459,101 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..new_len]) };
 
         *self = Self::new(candidate)?;
+
+        Ok(())
+    }
+
+    pub fn pop(&mut self) -> Option<char> {
+        if self.is_empty() {
+            return None;
+        }
+
+        let s = self.as_str();
+        let ch = s.chars().next_back()?;
+
+        let new_len = self.len - ch.len_utf8();
+
+        // SAFETY:
+        // truncating at char boundary preserves UTF-8 validity
+        let candidate = unsafe { core::str::from_utf8_unchecked(&self.buf[..new_len]) };
+
+        match Self::new(candidate) {
+            Ok(new) => {
+                *self = new;
+                Some(ch)
+            }
+            Err(_) => {
+                // cannot happen:
+                // existing instance is already valid,
+                // removing chars cannot violate MAX/ASCII,
+                // only possible issue is validator/MIN.
+                //
+                // std-like APIs should not fail here,
+                // so we preserve old state.
+                None
+            }
+        }
+    }
+
+    pub fn remove(&mut self, idx: usize) -> Result<char, GStringError<V::Err>> {
+        if !self.as_str().is_char_boundary(idx) {
+            return Err(GStringError::Mutation("idx is not a char boundary"));
+        }
+
+        let s = self.as_str();
+
+        let ch = s[idx..]
+            .chars()
+            .next()
+            .expect("cannot remove char from empty index");
+
+        let ch_len = ch.len_utf8();
+
+        let new_len = self.len - ch_len;
+
+        let mut buf = [0u8; MAX];
+
+        // before removed char
+        buf[..idx].copy_from_slice(&self.buf[..idx]);
+
+        // after removed char
+        buf[idx..new_len].copy_from_slice(&self.buf[idx + ch_len..self.len]);
+
+        // SAFETY:
+        // removal at char boundary preserves UTF-8 validity
+        let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..new_len]) };
+
+        *self = Self::new(candidate).expect("removal violated invariants");
+
+        Ok(ch)
+    }
+
+    pub fn truncate(&mut self, new_len: usize) -> Result<(), GStringError<V::Err>> {
+        if new_len >= self.len {
+            return Err(GStringError::Mutation("new_len is not a char boundary"));
+        }
+
+        if !self.as_str().is_char_boundary(new_len) {
+            return Err(GStringError::Mutation("new_len is not a char boundary"));
+        }
+
+        // SAFETY:
+        // truncating at char boundary preserves UTF-8 validity
+        let candidate = unsafe { core::str::from_utf8_unchecked(&self.buf[..new_len]) };
+
+        *self = Self::new(candidate).expect("truncate violated invariants");
+
+        Ok(())
+    }
+
+    pub fn clear(&mut self) -> Result<(), GStringError<V::Err>> {
+        if MIN != 0 {
+            return Err(GStringError::Mutation(
+                "cannot clear GString if MIN is not zero",
+            ));
+        }
+
+        *self = Self::new("")?;
 
         Ok(())
     }

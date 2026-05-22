@@ -556,4 +556,81 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
         Ok(())
     }
+
+    pub fn replace(&mut self, from: &str, to: &str) -> Result<(), GStringError<V::Err>> {
+        let replaced = self.as_str().replace(from, to);
+
+        *self = Self::new(&replaced)?;
+
+        Ok(())
+    }
+
+    pub fn replace_range<R>(
+        &mut self,
+        range: R,
+        replace_with: &str,
+    ) -> Result<(), GStringError<V::Err>>
+    where
+        R: core::ops::RangeBounds<usize>,
+    {
+        use core::ops::Bound;
+
+        let start = match range.start_bound() {
+            Bound::Included(&n) => n,
+            Bound::Excluded(&n) => n + 1,
+            Bound::Unbounded => 0,
+        };
+
+        let end = match range.end_bound() {
+            Bound::Included(&n) => n + 1,
+            Bound::Excluded(&n) => n,
+            Bound::Unbounded => self.len,
+        };
+
+        let s = self.as_str();
+
+        // Match String semantics
+        if !s.is_char_boundary(start) {
+            return Err(GStringError::Mutation("start range is not within boundary"));
+        }
+        if !s.is_char_boundary(end) {
+            return Err(GStringError::Mutation("end range is not within boundary"));
+        }
+        if start > end {
+            return Err(GStringError::Mutation(
+                "start range cannot be bigger than end",
+            ));
+        }
+
+        let mut buf = [0u8; MAX];
+
+        let before = &self.buf[..start];
+        let middle = replace_with.as_bytes();
+        let after = &self.buf[end..self.len];
+
+        let new_len = before.len() + middle.len() + after.len();
+
+        if new_len > MAX {
+            return Err(GStringError::TooLong);
+        }
+
+        // before
+        buf[..before.len()].copy_from_slice(before);
+
+        // replacement
+        buf[before.len()..before.len() + middle.len()].copy_from_slice(middle);
+
+        // after
+        buf[before.len() + middle.len()..new_len].copy_from_slice(after);
+
+        // SAFETY:
+        // - original string valid UTF-8
+        // - replace_with valid UTF-8
+        // - slicing only at char boundaries
+        let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..new_len]) };
+
+        *self = Self::new(candidate)?;
+
+        Ok(())
+    }
 }

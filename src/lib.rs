@@ -1,15 +1,11 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(feature = "alloc")]
-extern crate alloc;
-
-#[cfg(feature = "alloc")]
-use alloc::{borrow::ToOwned, string::String};
-
+mod conversion;
 mod error;
 mod macros;
 mod mutation;
+
 use error::{Err, GStringError};
 
 use core::{
@@ -17,7 +13,6 @@ use core::{
     error::Error,
     fmt::{Debug, Display},
     marker::PhantomData,
-    str::FromStr,
 };
 
 pub const DEFAULT_MIN: usize = 0;
@@ -51,16 +46,6 @@ pub struct GString<
     buf: [u8; MAX],
     len: usize,
     _validator: PhantomData<V>,
-}
-
-impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> FromStr
-    for GString<V, MIN, MAX, ASCII_ONLY>
-{
-    type Err = GStringError<V::Err>;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::try_new(s)
-    }
 }
 
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
@@ -231,22 +216,6 @@ impl<
     }
 }
 
-impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> AsRef<str>
-    for GString<V, MIN, MAX, ASCII_ONLY>
-{
-    fn as_ref(&self) -> &str {
-        self.as_str()
-    }
-}
-
-impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> AsRef<[u8]>
-    for GString<V, MIN, MAX, ASCII_ONLY>
-{
-    fn as_ref(&self) -> &[u8] {
-        self.as_bytes()
-    }
-}
-
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> Display
     for GString<V, MIN, MAX, ASCII_ONLY>
 {
@@ -267,15 +236,6 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> D
             MAX,
             ASCII_ONLY
         )
-    }
-}
-
-#[cfg(feature = "alloc")]
-impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
-    From<GString<V, MIN, MAX, ASCII_ONLY>> for String
-{
-    fn from(value: GString<V, MIN, MAX, ASCII_ONLY>) -> Self {
-        value.as_str().to_owned()
     }
 }
 
@@ -302,16 +262,6 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> c
 {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.as_str().hash(state)
-    }
-}
-
-impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> TryFrom<&str>
-    for GString<V, MIN, MAX, ASCII_ONLY>
-{
-    type Error = GStringError<V::Err>;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Self::from_str(value)
     }
 }
 

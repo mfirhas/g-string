@@ -618,7 +618,6 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
         let s = self.as_str();
 
-        // Match String semantics
         if !s.is_char_boundary(start) {
             return Err(GStringError::Mutation("start range is not within boundary"));
         }

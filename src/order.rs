@@ -1,3 +1,5 @@
+use crate::{GString, Validator};
+
 impl<V: Validator + Eq, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> Ord
     for GString<V, MIN, MAX, ASCII_ONLY>
 {

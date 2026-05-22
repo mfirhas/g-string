@@ -6,6 +6,8 @@ mod equality;
 mod error;
 mod macros;
 mod mutation;
+mod order;
+mod query;
 
 use error::{Err, GStringError};
 

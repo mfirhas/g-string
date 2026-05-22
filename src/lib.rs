@@ -59,7 +59,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> F
     type Err = GStringError<V::Err>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::new(s)
+        Self::try_new(s)
     }
 }
 
@@ -67,7 +67,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, MIN, MAX, ASCII_ONLY>
 {
     #[inline]
-    pub fn new(s: &str) -> Result<Self, GStringError<V::Err>> {
+    pub fn try_new(s: &str) -> Result<Self, GStringError<V::Err>> {
         let gstring = Self::stack_allocate(s)?;
 
         gstring.check_bounds()?;

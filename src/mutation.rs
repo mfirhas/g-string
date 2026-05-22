@@ -37,7 +37,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..end]) };
 
         // fully revalidate through centralized constructor
-        *self = Self::new(candidate)?;
+        *self = Self::try_new(candidate)?;
 
         Ok(())
     }
@@ -85,7 +85,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         // - concatenation of valid UTF-8 is valid UTF-8
         let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..new_len]) };
 
-        *self = Self::new(candidate)?;
+        *self = Self::try_new(candidate)?;
 
         Ok(())
     }
@@ -109,7 +109,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         // truncating at char boundary preserves UTF-8 validity
         let candidate = unsafe { core::str::from_utf8_unchecked(&self.buf[..new_len]) };
 
-        match Self::new(candidate) {
+        match Self::try_new(candidate) {
             Ok(new) => {
                 *self = new;
                 Ok(Some(ch))
@@ -145,7 +145,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         // removal at char boundary preserves UTF-8 validity
         let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..new_len]) };
 
-        *self = Self::new(candidate)?;
+        *self = Self::try_new(candidate)?;
 
         Ok(ch)
     }
@@ -163,7 +163,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         // truncating at char boundary preserves UTF-8 validity
         let candidate = unsafe { core::str::from_utf8_unchecked(&self.buf[..new_len]) };
 
-        *self = Self::new(candidate)?;
+        *self = Self::try_new(candidate)?;
 
         Ok(())
     }
@@ -175,7 +175,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             ));
         }
 
-        *self = Self::new("")?;
+        *self = Self::try_new("")?;
 
         Ok(())
     }
@@ -185,7 +185,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         // .replace requires allocation
         let replaced = self.as_str().replace(from, to);
 
-        *self = Self::new(&replaced)?;
+        *self = Self::try_new(&replaced)?;
 
         Ok(())
     }
@@ -261,7 +261,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         // - slicing only at char boundaries
         let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..new_len]) };
 
-        *self = Self::new(candidate)?;
+        *self = Self::try_new(candidate)?;
 
         Ok(())
     }

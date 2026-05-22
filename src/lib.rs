@@ -502,10 +502,9 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
         let s = self.as_str();
 
-        let ch = s[idx..]
-            .chars()
-            .next()
-            .expect("cannot remove char from empty index");
+        let ch = s[idx..].chars().next().ok_or(GStringError::Mutation(
+            "cannot remove char from empty index",
+        ))?;
 
         let ch_len = ch.len_utf8();
 
@@ -523,7 +522,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         // removal at char boundary preserves UTF-8 validity
         let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..new_len]) };
 
-        *self = Self::new(candidate).expect("removal violated invariants");
+        *self = Self::new(candidate)?;
 
         Ok(ch)
     }
@@ -541,7 +540,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         // truncating at char boundary preserves UTF-8 validity
         let candidate = unsafe { core::str::from_utf8_unchecked(&self.buf[..new_len]) };
 
-        *self = Self::new(candidate).expect("truncate violated invariants");
+        *self = Self::new(candidate)?;
 
         Ok(())
     }

@@ -233,6 +233,9 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
     #[inline]
     pub const fn as_bytes(&self) -> &[u8] {
+        // SAFETY:
+        // self.buf is valid for self.len bytes
+        // self.len is always maintained within bounds
         unsafe { core::slice::from_raw_parts(self.buf.as_ptr(), self.len) }
     }
 
@@ -321,6 +324,14 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> A
 {
     fn as_ref(&self) -> &str {
         self.as_str()
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> AsRef<[u8]>
+    for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
     }
 }
 

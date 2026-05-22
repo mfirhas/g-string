@@ -20,4 +20,8 @@ fn test_g_string() {
     // let ret = gstring!("🚀", NoValidation, 0, 100, true);
     // dbg!(&ret);
     // println!("{ret}");
+    //
+
+    let s = String::from("a");
+    // let b = s.find(pat)
 }

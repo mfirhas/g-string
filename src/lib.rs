@@ -606,12 +606,16 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
         let start = match range.start_bound() {
             Bound::Included(&n) => n,
-            Bound::Excluded(&n) => n + 1,
+            Bound::Excluded(&n) => n
+                .checked_add(1)
+                .ok_or(GStringError::Mutation("range overflow"))?,
             Bound::Unbounded => 0,
         };
 
         let end = match range.end_bound() {
-            Bound::Included(&n) => n + 1,
+            Bound::Included(&n) => n
+                .checked_add(1)
+                .ok_or(GStringError::Mutation("range overflow"))?,
             Bound::Excluded(&n) => n,
             Bound::Unbounded => self.len,
         };

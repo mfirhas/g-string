@@ -404,6 +404,10 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         let bytes = s.as_bytes();
         let end = self.len + bytes.len();
 
+        if end > MAX {
+            return Err(GStringError::TooLong);
+        }
+
         buf[self.len..end].copy_from_slice(bytes);
 
         // SAFETY:

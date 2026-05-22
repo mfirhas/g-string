@@ -186,7 +186,9 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
     #[inline]
     const fn check_bounds(&self) -> Result<(), Err> {
-        assert!(MIN <= MAX, "MIN cannot be bigger than MAX");
+        const {
+            assert!(MIN <= MAX, "MIN cannot be bigger than MAX");
+        }
         if self.len < MIN {
             return Err(Err::TooShort);
         }

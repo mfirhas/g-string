@@ -5,6 +5,9 @@ edition = "2024"
 description = "Generic String"
 license = "MIT"
 
+[package.metadata.docs.rs]
+all-features = true
+
 [features]
 default = ["std"]
 std = ["alloc"]

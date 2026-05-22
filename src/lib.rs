@@ -63,34 +63,9 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> F
     }
 }
 
-macro_rules! errpanic {
-    ($expr:expr) => {
-        match $expr {
-            Ok(v) => v,
-            Err(Err::TooShort) => {
-                panic!("string len is smaller than MIN")
-            }
-            Err(Err::TooLong) => {
-                panic!("string len is bigger than MAX")
-            }
-            Err(Err::NotAscii) => {
-                panic!("ASCII_ONLY is true, but not ascii")
-            }
-        }
-    };
-}
-
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, MIN, MAX, ASCII_ONLY>
 {
-    #[doc(hidden)]
-    pub const fn __new(s: &str) -> Self {
-        let ret = errpanic!(Self::stack_allocate(s));
-        errpanic!(ret.check_bounds());
-        errpanic!(ret.check_ascii());
-        ret
-    }
-
     #[inline]
     pub fn new(s: &str) -> Result<Self, GStringError<V::Err>> {
         let gstring = Self::stack_allocate(s)?;

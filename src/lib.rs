@@ -233,7 +233,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
     #[inline]
     pub const fn as_bytes(&self) -> &[u8] {
-        &self.buf
+        unsafe { core::slice::from_raw_parts(self.buf.as_ptr(), self.len) }
     }
 
     #[inline]
@@ -463,13 +463,18 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(())
     }
 
-    pub fn pop(&mut self) -> Option<char> {
+    pub fn pop(&mut self) -> Result<Option<char>, GStringError<V::Err>> {
         if self.is_empty() {
-            return None;
+            return Ok(None);
         }
 
         let s = self.as_str();
-        let ch = s.chars().next_back()?;
+        let ch = s.chars().next_back();
+        let ch = if let Some(ch) = ch {
+            ch
+        } else {
+            return Ok(None);
+        };
 
         let new_len = self.len - ch.len_utf8();
 
@@ -480,18 +485,9 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         match Self::new(candidate) {
             Ok(new) => {
                 *self = new;
-                Some(ch)
+                Ok(Some(ch))
             }
-            Err(_) => {
-                // cannot happen:
-                // existing instance is already valid,
-                // removing chars cannot violate MAX/ASCII,
-                // only possible issue is validator/MIN.
-                //
-                // std-like APIs should not fail here,
-                // so we preserve old state.
-                None
-            }
+            Err(err) => Err(err),
         }
     }
 
@@ -529,7 +525,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
     pub fn truncate(&mut self, new_len: usize) -> Result<(), GStringError<V::Err>> {
         if new_len >= self.len {
-            return Err(GStringError::Mutation("new_len is not a char boundary"));
+            return Ok(());
         }
 
         if !self.as_str().is_char_boundary(new_len) {

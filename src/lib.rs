@@ -23,7 +23,7 @@ pub const DEFAULT_ASCII_ONLY: bool = false;
 
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Err {
+enum Err {
     TooShort,
     TooLong,
     NotAscii,
@@ -47,18 +47,38 @@ impl Display for Err {
 
 impl Error for Err {}
 
+impl<VE> From<Err> for GStringError<VE> {
+    fn from(value: Err) -> Self {
+        match value {
+            Err::TooShort => Self::TooShort,
+            Err::TooLong => Self::TooLong,
+            Err::NotAscii => Self::NotAscii,
+        }
+    }
+}
+
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GStringError<VE> {
-    Err(Err),
+    TooShort,
+    TooLong,
+    NotAscii,
     Validation(VE),
 }
 
 impl<VE: Display + Debug> Display for GStringError<VE> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::Err(err) => write!(f, "{}", err),
-            Self::Validation(err) => write!(f, "{}", err),
+            Self::TooShort => {
+                write!(f, "string len is smaller than MIN")
+            }
+            Self::TooLong => {
+                write!(f, "string len is bigger than MAX")
+            }
+            Self::NotAscii => {
+                write!(f, "ASCII_ONLY is true, but not ascii")
+            }
+            Self::Validation(err) => write!(f, "validation error: {}", err),
         }
     }
 }
@@ -127,20 +147,19 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     #[doc(hidden)]
     pub const fn __new(s: &str) -> Self {
         let ret = errpanic!(Self::stack_allocate(s));
-        let ret = errpanic!(ret.check_bounds());
-        let ret = errpanic!(ret.check_ascii());
+        errpanic!(ret.check_bounds());
+        errpanic!(ret.check_ascii());
         ret
     }
 
     #[inline]
     pub fn new(s: &str) -> Result<Self, GStringError<V::Err>> {
-        Self::stack_allocate(s)
-            .map_err(GStringError::Err)?
-            .check_bounds()
-            .map_err(GStringError::Err)?
-            .check_ascii()
-            .map_err(GStringError::Err)?
-            .validate()
+        let gstring = Self::stack_allocate(s)?;
+
+        gstring.check_bounds()?;
+        gstring.check_ascii()?;
+
+        gstring.validate()
     }
 
     const fn stack_allocate(s: &str) -> Result<Self, Err> {
@@ -166,7 +185,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     }
 
     #[inline]
-    const fn check_bounds(&self) -> Result<Self, Err> {
+    const fn check_bounds(&self) -> Result<(), Err> {
         assert!(MIN <= MAX, "MIN cannot be bigger than MAX");
         if self.len < MIN {
             return Err(Err::TooShort);
@@ -175,11 +194,11 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             return Err(Err::TooLong);
         }
 
-        Ok(*self)
+        Ok(())
     }
 
     #[inline]
-    const fn check_ascii(&self) -> Result<Self, Err> {
+    const fn check_ascii(&self) -> Result<(), Err> {
         if ASCII_ONLY {
             let mut i = 0;
             while i < self.len {
@@ -191,13 +210,13 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             }
         }
 
-        Ok(*self)
+        Ok(())
     }
 
     #[inline(always)]
-    pub fn validate(&self) -> Result<Self, GStringError<V::Err>> {
+    pub fn validate(self) -> Result<Self, GStringError<V::Err>> {
         V::validate(self.as_str()).map_err(GStringError::Validation)?;
-        Ok(*self)
+        Ok(self)
     }
 
     pub const fn as_str(&self) -> &str {

@@ -378,9 +378,9 @@ impl<V: Validator, const MAX: usize, const ASCII_ONLY: bool> Default
     }
 }
 
-// --------------
+// ------------------------------------------------------------------------------------
 // MUTATION APIs
-// --------------
+// ------------------------------------------------------------------------------------
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, MIN, MAX, ASCII_ONLY>
 {
@@ -411,6 +411,53 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..end]) };
 
         // fully revalidate through centralized constructor
+        *self = Self::new(candidate)?;
+
+        Ok(())
+    }
+
+    pub fn insert(&mut self, idx: usize, ch: char) -> Result<(), GStringError<V::Err>> {
+        let mut buf = [0u8; 4];
+        let encoded = ch.encode_utf8(&mut buf);
+
+        self.insert_str(idx, encoded)
+    }
+
+    pub fn insert_str(&mut self, idx: usize, string: &str) -> Result<(), GStringError<V::Err>> {
+        // same behavior as String
+        assert!(
+            self.as_str().is_char_boundary(idx),
+            "idx is not a char boundary"
+        );
+
+        let insert_bytes = string.as_bytes();
+        let insert_len = insert_bytes.len();
+
+        let new_len = self.len + insert_len;
+
+        // early capacity check to avoid panic
+        if new_len > MAX {
+            return Err(GStringError::TooLong);
+        }
+
+        let mut buf = [0u8; MAX];
+
+        // before insertion point
+        buf[..idx].copy_from_slice(&self.buf[..idx]);
+
+        // inserted bytes
+        buf[idx..idx + insert_len].copy_from_slice(insert_bytes);
+
+        // after insertion point
+        buf[idx + insert_len..new_len].copy_from_slice(&self.buf[idx..self.len]);
+
+        // SAFETY:
+        // - original bytes are valid UTF-8
+        // - inserted string is valid UTF-8
+        // - insertion only happens at char boundary
+        // - concatenation of valid UTF-8 is valid UTF-8
+        let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..new_len]) };
+
         *self = Self::new(candidate)?;
 
         Ok(())

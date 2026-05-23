@@ -55,8 +55,11 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, MIN, MAX, ASCII_ONLY>
 {
     #[inline]
-    pub fn try_new(s: &str) -> Result<Self, GStringError<V::Err>> {
-        let gstring = Self::stack_allocate(s)?;
+    pub fn try_new<S>(s: S) -> Result<Self, GStringError<V::Err>>
+    where
+        S: AsRef<str>,
+    {
+        let gstring = Self::stack_allocate(s.as_ref())?;
 
         gstring.check_bounds()?;
         gstring.check_ascii()?;
@@ -130,14 +133,6 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             let slice = core::slice::from_raw_parts(self.buf.as_ptr(), self.len);
             core::str::from_utf8_unchecked(slice)
         }
-    }
-
-    #[inline]
-    pub const fn as_bytes(&self) -> &[u8] {
-        // SAFETY:
-        // self.buf is valid for self.len bytes
-        // self.len is always maintained within bounds
-        unsafe { core::slice::from_raw_parts(self.buf.as_ptr(), self.len) }
     }
 
     #[inline]

@@ -149,6 +149,11 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     pub const fn capacity(&self) -> usize {
         MAX
     }
+
+    #[inline]
+    pub const fn is_full(&self) -> bool {
+        self.len == MAX
+    }
 }
 
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> Display

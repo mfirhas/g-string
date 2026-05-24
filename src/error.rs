@@ -18,7 +18,7 @@ impl Display for Err {
                 write!(f, "string len is bigger than MAX")
             }
             Self::NotAscii => {
-                write!(f, "ASCII_ONLY is true, but not ascii")
+                write!(f, "only ASCII characters are allowed")
             }
         }
     }
@@ -56,7 +56,7 @@ impl<VE: Display + Debug> Display for GStringError<VE> {
                 write!(f, "string len is bigger than MAX")
             }
             Self::NotAscii => {
-                write!(f, "ASCII_ONLY is true, but not ascii")
+                write!(f, "only ASCII characters are allowed")
             }
             Self::Validation(err) => write!(f, "validation error: {}", err),
             Self::Mutation(err) => write!(f, "mutation error: {}", err),

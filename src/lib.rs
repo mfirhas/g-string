@@ -131,7 +131,8 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
     #[inline]
     pub const fn as_str(&self) -> &str {
-        // UNSAFE: this is to avoid dealing with fallible function, also the bytes are always created from UTF-8 string.
+        // SAFETY:
+        // GString is always built from valid UTF-8 encoded string.
         unsafe {
             let slice = core::slice::from_raw_parts(self.buf.as_ptr(), self.len);
             core::str::from_utf8_unchecked(slice)

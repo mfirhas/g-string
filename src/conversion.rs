@@ -136,6 +136,8 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             len = end;
         }
 
+        // SAFETY:
+        // buf always comes from UTF-8 encoded char
         let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..len]) };
 
         Self::try_new(candidate)

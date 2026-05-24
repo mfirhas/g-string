@@ -22,6 +22,9 @@ pub const DEFAULT_MIN: usize = 0;
 pub const DEFAULT_MAX: usize = 255;
 pub const DEFAULT_ASCII_ONLY: bool = false;
 
+pub type GStringNV<const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> =
+    GString<NoValidation, MIN, MAX, ASCII_ONLY>;
+
 pub trait Validator: Copy {
     type Err: Error + Send + Sync + 'static;
 

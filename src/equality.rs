@@ -1,10 +1,18 @@
 use crate::{GString, Validator};
 
-impl<LHSV: Validator, RHSV: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
-    PartialEq<GString<RHSV, MIN, MAX, ASCII_ONLY>> for GString<LHSV, MIN, MAX, ASCII_ONLY>
+impl<
+    LHSV: Validator,
+    RHSV: Validator,
+    const LMIN: usize,
+    const LMAX: usize,
+    const LASCII: bool,
+    const RMIN: usize,
+    const RMAX: usize,
+    const RASCII: bool,
+> PartialEq<GString<RHSV, RMIN, RMAX, RASCII>> for GString<LHSV, LMIN, LMAX, LASCII>
 {
-    fn eq(&self, other: &GString<RHSV, MIN, MAX, ASCII_ONLY>) -> bool {
-        self.len == other.len && self.buf[..self.len] == other.buf[..other.len]
+    fn eq(&self, other: &GString<RHSV, RMIN, RMAX, RASCII>) -> bool {
+        self.as_str() == other.as_str()
     }
 }
 

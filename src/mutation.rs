@@ -266,3 +266,23 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(())
     }
 }
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    GString<V, MIN, MAX, ASCII_ONLY>
+{
+    pub fn try_extend<I, S>(&mut self, iter: I) -> Result<(), GStringError<V::Err>>
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
+        let mut tmp = self.clone();
+
+        for s in iter {
+            tmp.push_str(s.as_ref())?;
+        }
+
+        *self = tmp;
+
+        Ok(())
+    }
+}

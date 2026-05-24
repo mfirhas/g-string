@@ -143,6 +143,19 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         self.len
     }
 
+    /// Counts Unicode scalar values (`char`).
+    #[inline]
+    pub fn count(&self) -> usize {
+        self.chars().count()
+    }
+
+    /// Counts user-perceived characters (grapheme clusters).
+    #[cfg(feature = "grapheme")]
+    pub fn grapheme_count(&self) -> usize {
+        use unicode_segmentation::UnicodeSegmentation;
+        self.graphemes(true).count()
+    }
+
     #[inline]
     pub const fn is_empty(&self) -> bool {
         self.len == 0

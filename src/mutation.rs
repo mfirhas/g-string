@@ -1,3 +1,5 @@
+use core::fmt::Write;
+
 use crate::{GString, GStringError, Validator};
 
 // ------------------------------------------------------------------------------------
@@ -299,5 +301,17 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         *self = tmp;
 
         Ok(())
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> Write
+    for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        self.push_str(s).map_err(|_| core::fmt::Error)
+    }
+
+    fn write_char(&mut self, c: char) -> core::fmt::Result {
+        self.push(c).map_err(|_| core::fmt::Error)
     }
 }

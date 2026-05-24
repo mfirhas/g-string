@@ -8,11 +8,22 @@ impl<V: Validator + Eq, const MIN: usize, const MAX: usize, const ASCII_ONLY: bo
     }
 }
 
-impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> PartialOrd
-    for GString<V, MIN, MAX, ASCII_ONLY>
+impl<
+    LHSV: Validator,
+    RHSV: Validator,
+    const LMIN: usize,
+    const LMAX: usize,
+    const LASCII: bool,
+    const RMIN: usize,
+    const RMAX: usize,
+    const RASCII: bool,
+> PartialOrd<GString<RHSV, RMIN, RMAX, RASCII>> for GString<LHSV, LMIN, LMAX, LASCII>
 {
-    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-        Some(self.as_str().cmp(other))
+    fn partial_cmp(
+        &self,
+        other: &GString<RHSV, RMIN, RMAX, RASCII>,
+    ) -> Option<core::cmp::Ordering> {
+        Some(self.as_str().cmp(other.as_str()))
     }
 }
 

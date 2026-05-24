@@ -63,3 +63,86 @@ macro_rules! gstring {
         RET
     }};
 }
+
+#[macro_export]
+macro_rules! gformat {
+    // -----------------------------------------------------------------------------
+    // DEFAULT GENERICS
+    // -----------------------------------------------------------------------------
+    ($fmt:expr $(, $args:expr)* ) => {
+        gformat!(
+            $fmt $(, $args)* ;
+            $crate::NoValidation,
+            { $crate::DEFAULT_MIN },
+            { $crate::DEFAULT_MAX },
+            { $crate::DEFAULT_ASCII_ONLY }
+        )
+    };
+
+    // -----------------------------------------------------------------------------
+    // VALIDATOR ONLY
+    // -----------------------------------------------------------------------------
+    ($fmt:expr $(, $args:expr)* ; $validator:ty) => {
+        gformat!(
+            $fmt $(, $args)* ;
+            $validator,
+            { $crate::DEFAULT_MIN },
+            { $crate::DEFAULT_MAX },
+            { $crate::DEFAULT_ASCII_ONLY }
+        )
+    };
+
+    // -----------------------------------------------------------------------------
+    // VALIDATOR + MIN
+    // -----------------------------------------------------------------------------
+    ($fmt:expr $(, $args:expr)* ; $validator:ty, $min:expr) => {
+        gformat!(
+            $fmt $(, $args)* ;
+            $validator,
+            $min,
+            { $crate::DEFAULT_MAX },
+            { $crate::DEFAULT_ASCII_ONLY }
+        )
+    };
+
+    // -----------------------------------------------------------------------------
+    // VALIDATOR + MIN + MAX
+    // -----------------------------------------------------------------------------
+    ($fmt:expr $(, $args:expr)* ; $validator:ty, $min:expr, $max:expr) => {
+        gformat!(
+            $fmt $(, $args)* ;
+            $validator,
+            $min,
+            $max,
+            { $crate::DEFAULT_ASCII_ONLY }
+        )
+    };
+
+    // -----------------------------------------------------------------------------
+    // FULL FORM
+    // -----------------------------------------------------------------------------
+    (
+        $fmt:expr $(, $args:expr)* ;
+        $validator:ty,
+        $min:expr,
+        $max:expr,
+        $ascii_only:expr
+    ) => {{
+        #[cfg(feature = "alloc")]
+        {
+            let s = alloc::format!($fmt $(, $args)*);
+
+            $crate::GString::<
+                $validator,
+                $min,
+                $max,
+                $ascii_only
+            >::try_new(&s)
+        }
+
+        #[cfg(not(feature = "alloc"))]
+        compile_error!(
+            "gformat! requires the `alloc` feature"
+        );
+    }};
+}

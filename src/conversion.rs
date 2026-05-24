@@ -79,3 +79,64 @@ impl<'a, V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: boo
         Self::from_str(&value)
     }
 }
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    GString<V, MIN, MAX, ASCII_ONLY>
+{
+    pub fn try_from_iter<I, S>(iter: I) -> Result<Self, GStringError<V::Err>>
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
+        let mut ret = Self::try_new("")?;
+
+        let mut iter_peek = iter.into_iter().peekable();
+
+        if iter_peek.peek().is_none() {
+            if MIN == 0 {
+                return Self::try_new("");
+            } else {
+                return Err(GStringError::TooShort);
+            }
+        }
+
+        for (i, s) in iter_peek.into_iter().enumerate() {
+            if i == 0 {
+                ret = Self::try_new(s)?;
+            } else {
+                ret.push_str(s.as_ref())?;
+            }
+        }
+
+        Ok(ret)
+    }
+
+    pub fn try_from_chars<I>(iter: I) -> Result<Self, GStringError<V::Err>>
+    where
+        I: IntoIterator<Item = char>,
+    {
+        let mut ret = Self::try_new("")?;
+
+        let mut iter_peek = iter.into_iter().peekable();
+
+        if iter_peek.peek().is_none() {
+            if MIN == 0 {
+                return Self::try_new("");
+            } else {
+                return Err(GStringError::TooShort);
+            }
+        }
+
+        for (i, s) in iter_peek.into_iter().enumerate() {
+            if i == 0 {
+                let mut buf = [0u8; 4];
+                let s_from_char = s.encode_utf8(&mut buf);
+                ret = Self::try_new(s_from_char)?;
+            } else {
+                ret.push(s)?;
+            }
+        }
+
+        Ok(ret)
+    }
+}

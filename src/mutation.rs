@@ -27,7 +27,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         let end = self.len + bytes.len();
 
         if end > MAX {
-            return Err(GStringError::TooLong);
+            return Err(GStringError::TooLong(MAX));
         }
 
         buf[self.len..end].copy_from_slice(bytes);
@@ -63,7 +63,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
         // early capacity check to avoid panic
         if new_len > MAX {
-            return Err(GStringError::TooLong);
+            return Err(GStringError::TooLong(MAX));
         }
 
         let mut buf = [0u8; MAX];
@@ -242,10 +242,10 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             .len()
             .checked_add(middle.len())
             .and_then(|n| n.checked_add(after.len()))
-            .ok_or(GStringError::TooLong)?;
+            .ok_or(GStringError::TooLong(MAX))?;
 
         if new_len > MAX {
-            return Err(GStringError::TooLong);
+            return Err(GStringError::TooLong(MAX));
         }
 
         // before

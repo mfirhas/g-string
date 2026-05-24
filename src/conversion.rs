@@ -98,7 +98,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             let end = len + bytes.len();
 
             if end > MAX {
-                return Err(GStringError::TooLong);
+                return Err(GStringError::TooLong(MAX));
             }
 
             buf[len..end].copy_from_slice(bytes);
@@ -128,7 +128,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             let end = len + bytes.len();
 
             if end > MAX {
-                return Err(GStringError::TooLong);
+                return Err(GStringError::TooLong(MAX));
             }
 
             buf[len..end].copy_from_slice(bytes);

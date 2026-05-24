@@ -75,7 +75,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         let len = bytes.len();
 
         if len > MAX {
-            return Err(Err::TooLong);
+            return Err(Err::TooLong(MAX));
         }
 
         let mut buf = [0u8; MAX];
@@ -98,10 +98,10 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             assert!(MIN <= MAX, "MIN cannot be bigger than MAX");
         }
         if self.len < MIN {
-            return Err(Err::TooShort);
+            return Err(Err::TooShort(MIN));
         }
         if self.len > MAX {
-            return Err(Err::TooLong);
+            return Err(Err::TooLong(MAX));
         }
 
         Ok(())

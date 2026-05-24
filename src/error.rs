@@ -3,19 +3,19 @@ use core::{error::Error, fmt::Debug, fmt::Display};
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Err {
-    TooShort,
-    TooLong,
+    TooShort(usize),
+    TooLong(usize),
     NotAscii,
 }
 
 impl Display for Err {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::TooShort => {
-                write!(f, "string len is smaller than MIN")
+            Self::TooShort(min) => {
+                write!(f, "minimum length allowed is {}", min)
             }
-            Self::TooLong => {
-                write!(f, "string len is bigger than MAX")
+            Self::TooLong(max) => {
+                write!(f, "maximum length allowed is {}", max)
             }
             Self::NotAscii => {
                 write!(f, "only ASCII characters are allowed")
@@ -29,8 +29,8 @@ impl Error for Err {}
 impl<VE> From<Err> for GStringError<VE> {
     fn from(value: Err) -> Self {
         match value {
-            Err::TooShort => Self::TooShort,
-            Err::TooLong => Self::TooLong,
+            Err::TooShort(min) => Self::TooShort(min),
+            Err::TooLong(max) => Self::TooLong(max),
             Err::NotAscii => Self::NotAscii,
         }
     }
@@ -39,8 +39,8 @@ impl<VE> From<Err> for GStringError<VE> {
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GStringError<VE> {
-    TooShort,
-    TooLong,
+    TooShort(usize),
+    TooLong(usize),
     NotAscii,
     Validation(VE),
     Mutation(&'static str),
@@ -49,11 +49,11 @@ pub enum GStringError<VE> {
 impl<VE: Display + Debug> Display for GStringError<VE> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::TooShort => {
-                write!(f, "string len is smaller than MIN")
+            Self::TooShort(min) => {
+                write!(f, "minimum length allowed is {}", min)
             }
-            Self::TooLong => {
-                write!(f, "string len is bigger than MAX")
+            Self::TooLong(max) => {
+                write!(f, "maximum length allowed is {}", max)
             }
             Self::NotAscii => {
                 write!(f, "only ASCII characters are allowed")

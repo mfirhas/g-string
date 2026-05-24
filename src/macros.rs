@@ -4,14 +4,14 @@ macro_rules! errpanic {
     ($expr:expr) => {
         match $expr {
             Ok(v) => v,
-            Err(Err::TooShort) => {
-                panic!("string len is smaller than MIN")
+            Err(Err::TooShort(_)) => {
+                panic!("minimum length below MIN")
             }
-            Err(Err::TooLong) => {
-                panic!("string len is bigger than MAX")
+            Err(Err::TooLong(_)) => {
+                panic!("maximum length exceeds MAX")
             }
             Err(Err::NotAscii) => {
-                panic!("ASCII_ONLY is true, but not ascii")
+                panic!("only ASCII characters are allowed")
             }
         }
     };

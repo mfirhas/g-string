@@ -88,7 +88,11 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         I: IntoIterator<Item = S>,
         S: AsRef<str>,
     {
-        let mut ret = Self::try_new("")?;
+        let mut ret = if MIN > 0 {
+            Self::try_new("0")?
+        } else {
+            Self::try_new("")?
+        };
 
         let mut iter_peek = iter.into_iter().peekable();
 
@@ -108,6 +112,10 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             }
         }
 
+        if MIN > 0 {
+            ret = Self::try_new(&ret[1..])?;
+        }
+
         Ok(ret)
     }
 
@@ -115,7 +123,11 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     where
         I: IntoIterator<Item = char>,
     {
-        let mut ret = Self::try_new("")?;
+        let mut ret = if MIN > 0 {
+            Self::try_new("0")?
+        } else {
+            Self::try_new("")?
+        };
 
         let mut iter_peek = iter.into_iter().peekable();
 
@@ -135,6 +147,10 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
             } else {
                 ret.push(s)?;
             }
+        }
+
+        if MIN > 0 {
+            ret = Self::try_new(&ret[1..])?;
         }
 
         Ok(ret)

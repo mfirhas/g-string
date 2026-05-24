@@ -285,4 +285,19 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
         Ok(())
     }
+
+    pub fn try_extend_chars<I>(&mut self, iter: I) -> Result<(), GStringError<V::Err>>
+    where
+        I: IntoIterator<Item = char>,
+    {
+        let mut tmp = self.clone();
+
+        for ch in iter {
+            tmp.push(ch)?;
+        }
+
+        *self = tmp;
+
+        Ok(())
+    }
 }

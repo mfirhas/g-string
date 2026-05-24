@@ -331,7 +331,9 @@ where
             return (remaining, Some(remaining));
         }
 
-        (0, Some(remaining))
+        let min = remaining.div_ceil(4);
+
+        (min, Some(remaining))
     }
 }
 

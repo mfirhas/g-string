@@ -130,7 +130,7 @@ macro_rules! gformat {
     ) => {{
         #[cfg(feature = "alloc")]
         {
-            let s = alloc::format!($fmt $(, $args)*);
+            let s = format!($fmt $(, $args)*);
 
             $crate::GString::<
                 $validator,

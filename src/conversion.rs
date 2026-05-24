@@ -88,71 +88,56 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         I: IntoIterator<Item = S>,
         S: AsRef<str>,
     {
-        let mut ret = if MIN > 0 {
-            Self::try_new("0")?
-        } else {
-            Self::try_new("")?
-        };
+        let mut buf = [0u8; MAX];
+        let mut len = 0;
 
-        let mut iter_peek = iter.into_iter().peekable();
+        for s in iter {
+            let s = s.as_ref();
+            let bytes = s.as_bytes();
 
-        if iter_peek.peek().is_none() {
-            if MIN == 0 {
-                return Self::try_new("");
-            } else {
-                return Err(GStringError::TooShort);
+            let end = len + bytes.len();
+
+            if end > MAX {
+                return Err(GStringError::TooLong);
             }
+
+            buf[len..end].copy_from_slice(bytes);
+
+            len = end;
         }
 
-        for (i, s) in iter_peek.into_iter().enumerate() {
-            if i == 0 {
-                ret = Self::try_new(s)?;
-            } else {
-                ret.push_str(s.as_ref())?;
-            }
-        }
+        // SAFETY:
+        // concatenation of valid UTF-8 strings is valid UTF-8
+        let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..len]) };
 
-        if MIN > 0 {
-            ret = Self::try_new(&ret[1..])?;
-        }
-
-        Ok(ret)
+        Self::try_new(candidate)
     }
 
     pub fn try_from_chars<I>(iter: I) -> Result<Self, GStringError<V::Err>>
     where
         I: IntoIterator<Item = char>,
     {
-        let mut ret = if MIN > 0 {
-            Self::try_new("0")?
-        } else {
-            Self::try_new("")?
-        };
+        let mut buf = [0u8; MAX];
+        let mut len = 0;
 
-        let mut iter_peek = iter.into_iter().peekable();
+        for ch in iter {
+            let mut tmp = [0u8; 4];
+            let encoded = ch.encode_utf8(&mut tmp);
 
-        if iter_peek.peek().is_none() {
-            if MIN == 0 {
-                return Self::try_new("");
-            } else {
-                return Err(GStringError::TooShort);
+            let bytes = encoded.as_bytes();
+            let end = len + bytes.len();
+
+            if end > MAX {
+                return Err(GStringError::TooLong);
             }
+
+            buf[len..end].copy_from_slice(bytes);
+
+            len = end;
         }
 
-        for (i, s) in iter_peek.into_iter().enumerate() {
-            if i == 0 {
-                let mut buf = [0u8; 4];
-                let s_from_char = s.encode_utf8(&mut buf);
-                ret = Self::try_new(s_from_char)?;
-            } else {
-                ret.push(s)?;
-            }
-        }
+        let candidate = unsafe { core::str::from_utf8_unchecked(&buf[..len]) };
 
-        if MIN > 0 {
-            ret = Self::try_new(&ret[1..])?;
-        }
-
-        Ok(ret)
+        Self::try_new(candidate)
     }
 }

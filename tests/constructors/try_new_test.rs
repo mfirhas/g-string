@@ -738,3 +738,196 @@ fn is_full_with_multibyte_chars() {
     let g2 = G::try_new("abc").unwrap();
     assert!(!g2.is_full());
 }
+
+// ---------------------------------------------------------------------------
+// 13. grapheme_count() — user-perceived characters (grapheme clusters)
+//     Requires `--features grapheme`. Oracle: unicode_segmentation directly.
+//
+//     Key insight: grapheme_count() <= count() <= len()
+//     They only all agree for pure ASCII with no combining marks.
+// ---------------------------------------------------------------------------
+
+#[cfg(feature = "grapheme")]
+mod grapheme_tests {
+    use super::*;
+    use unicode_segmentation::UnicodeSegmentation;
+
+    struct GraphemeCase {
+        label: &'static str,
+        input: &'static str,
+        /// oracle: input.graphemes(true).count()
+        expected_graphemes: usize,
+        /// for contrast
+        expected_chars: usize,
+    }
+
+    #[test]
+    fn grapheme_count_matches_unicode_segmentation_oracle() {
+        type G = GString<NoValidation, 0, 255, false>;
+
+        let cases: &[GraphemeCase] = &[
+            GraphemeCase {
+                label: "empty",
+                input: "",
+                expected_graphemes: 0,
+                expected_chars: 0,
+            },
+            GraphemeCase {
+                label: "pure ASCII — graphemes == chars == len",
+                input: "hello",
+                expected_graphemes: 5,
+                expected_chars: 5,
+            },
+            GraphemeCase {
+                label: "2-byte char é — one grapheme, one scalar",
+                input: "café",
+                expected_graphemes: 4,
+                expected_chars: 4,
+            },
+            GraphemeCase {
+                label: "combining accent — e + combining acute = 1 grapheme, 2 scalars",
+                // U+0065 LATIN SMALL LETTER E + U+0301 COMBINING ACUTE ACCENT
+                input: "e\u{0301}",
+                expected_graphemes: 1,
+                expected_chars: 2, // two Unicode scalar values
+            },
+            GraphemeCase {
+                label: "multiple combining marks",
+                // a + combining grave + combining tilde = 1 grapheme, 3 scalars
+                input: "a\u{0300}\u{0303}",
+                expected_graphemes: 1,
+                expected_chars: 3,
+            },
+            GraphemeCase {
+                label: "emoji — single codepoint",
+                input: "🦀",
+                expected_graphemes: 1,
+                expected_chars: 1,
+            },
+            GraphemeCase {
+                label: "emoji ZWJ sequence — family emoji is 1 grapheme, many scalars",
+                // 👨‍👩‍👧‍👦  = man + ZWJ + woman + ZWJ + girl + ZWJ + boy
+                input: "👨\u{200D}👩\u{200D}👧\u{200D}👦",
+                expected_graphemes: 1,
+                expected_chars: 7, // 4 emoji + 3 ZWJ
+            },
+            GraphemeCase {
+                label: "flag — regional indicator pair = 1 grapheme, 2 scalars",
+                // 🇺🇸  = U+1F1FA + U+1F1F8
+                input: "\u{1F1FA}\u{1F1F8}",
+                expected_graphemes: 1,
+                expected_chars: 2,
+            },
+            GraphemeCase {
+                label: "mixed — ASCII + combining + emoji",
+                // "hi" + e-with-combining-acute + 🦀
+                input: "hie\u{0301}🦀",
+                expected_graphemes: 4, // h, i, é(cluster), 🦀
+                expected_chars: 5,     // h, i, e, combining-acute, 🦀
+            },
+            GraphemeCase {
+                label: "hangul — precomposed syllable (NFC)",
+                // 가 is a single precomposed Hangul syllable
+                input: "가나다",
+                expected_graphemes: 3,
+                expected_chars: 3,
+            },
+            GraphemeCase {
+                label: "hangul — decomposed jamo (NFD), clusters into syllables",
+                // ᄀ + ᅡ = 가 as two jamo → 1 grapheme cluster
+                input: "\u{1100}\u{1161}",
+                expected_graphemes: 1,
+                expected_chars: 2,
+            },
+        ];
+
+        for case in cases {
+            let g = G::try_new(case.input)
+                .unwrap_or_else(|e| panic!("[{}] try_new failed: {:?}", case.label, e));
+
+            // Oracle via unicode_segmentation directly on &str
+            let oracle = case.input.graphemes(true).count();
+
+            assert_eq!(
+                g.grapheme_count(),
+                oracle,
+                "[{}] grapheme_count() vs unicode_segmentation oracle mismatch",
+                case.label
+            );
+            assert_eq!(
+                g.grapheme_count(),
+                case.expected_graphemes,
+                "[{}] grapheme_count() mismatch",
+                case.label
+            );
+            assert_eq!(
+                g.count(),
+                case.expected_chars,
+                "[{}] count() (scalar values) mismatch",
+                case.label
+            );
+        }
+    }
+
+    #[test]
+    fn grapheme_count_le_count_le_len() {
+        // Invariant: grapheme_count() <= count() <= len() always holds
+        type G = GString<NoValidation, 0, 255, false>;
+
+        let inputs = [
+            "",
+            "hello",
+            "café",
+            "e\u{0301}", // combining accent
+            "🦀",
+            "👨\u{200D}👩\u{200D}👧\u{200D}👦", // ZWJ family
+            "\u{1F1FA}\u{1F1F8}",               // flag
+            "hie\u{0301}🦀",
+            "こんにちは",
+        ];
+
+        for input in inputs {
+            let g = G::try_new(input)
+                .unwrap_or_else(|e| panic!("try_new({:?}) failed: {:?}", input, e));
+
+            assert!(
+                g.grapheme_count() <= g.count(),
+                "grapheme_count ({}) > count ({}) for {:?}",
+                g.grapheme_count(),
+                g.count(),
+                input
+            );
+            assert!(
+                g.count() <= g.len(),
+                "count ({}) > len ({}) for {:?}",
+                g.count(),
+                g.len(),
+                input
+            );
+        }
+    }
+
+    #[test]
+    fn grapheme_count_equals_count_for_pure_ascii() {
+        // For plain ASCII with no combining marks, all three agree
+        type G = GString<NoValidation, 0, 64, false>;
+
+        let inputs = ["", "a", "hello", "0123456789", "!@#$%"];
+
+        for input in inputs {
+            let g = G::try_new(input).unwrap();
+            assert_eq!(
+                g.grapheme_count(),
+                g.count(),
+                "grapheme_count should equal count for ASCII {:?}",
+                input
+            );
+            assert_eq!(
+                g.grapheme_count(),
+                g.len(),
+                "grapheme_count should equal len for ASCII {:?}",
+                input
+            );
+        }
+    }
+}

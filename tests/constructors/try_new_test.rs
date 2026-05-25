@@ -603,38 +603,8 @@ fn count_differs_from_len_for_multibyte() {
 
 #[test]
 fn capacity_equals_max_const() {
-    // capacity() is purely a function of the MAX const — independent of content
-
-    struct CapCase {
-        label: &'static str,
-        capacity: usize,
-    }
-
-    let cases: &[CapCase] = &[
-        CapCase {
-            label: "MAX=8",
-            capacity: 8,
-        },
-        CapCase {
-            label: "MAX=16",
-            capacity: 16,
-        },
-        CapCase {
-            label: "MAX=64",
-            capacity: 64,
-        },
-        CapCase {
-            label: "MAX=255",
-            capacity: 255,
-        },
-    ];
-
-    // We verify by constructing with different MAX values and asserting capacity()
-    // Each branch uses a distinct type alias.
-    {
-        let _ = cases; // suppress unused warning; actual checks are per-type below
-    }
-
+    // capacity() is purely a function of the MAX const — independent of content.
+    // Each GString is a distinct monomorphization so we assert inline per type.
     let g8 = GString::<NoValidation, 0, 8, false>::try_new("hi").unwrap();
     let g16 = GString::<NoValidation, 0, 16, false>::try_new("hi").unwrap();
     let g64 = GString::<NoValidation, 0, 64, false>::try_new("hi").unwrap();

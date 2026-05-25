@@ -56,6 +56,16 @@ pub struct GString<
     _validator: PhantomData<V>,
 }
 
+impl GString {
+    #[inline]
+    pub fn try_default<S>(s: S) -> Result<Self, GStringError<Infallible>>
+    where
+        S: AsRef<str>,
+    {
+        Self::try_new(s)
+    }
+}
+
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, MIN, MAX, ASCII_ONLY>
 {

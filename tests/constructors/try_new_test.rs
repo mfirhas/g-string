@@ -55,8 +55,6 @@ struct ErrCase<VE> {
 
 #[test]
 fn try_new_ok_no_constraints() {
-    type G = GString<NoValidation, 0, 255, false>;
-
     let cases: &[OkCase] = &[
         OkCase {
             label: "empty string",
@@ -113,7 +111,7 @@ fn try_new_ok_no_constraints() {
     ];
 
     for case in cases {
-        let result = G::try_new(case.input);
+        let result = GString::try_default(case.input);
         assert!(
             result.is_ok(),
             "[{}] expected Ok, got {:?}",

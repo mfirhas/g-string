@@ -35,7 +35,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> T
     type Error = GStringError<V::Err>;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::from_str(&value)
+        Self::try_new(&value)
     }
 }
 

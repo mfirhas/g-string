@@ -1,5 +1,3 @@
-// tests/try_new.rs
-
 use g_string::{GString, GStringError, NoValidation, Validator};
 use std::convert::Infallible;
 

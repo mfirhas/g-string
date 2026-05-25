@@ -9,7 +9,9 @@ mod macros;
 mod mutation;
 mod order;
 
-use error::{Err, GStringError};
+pub use error::GStringError;
+
+use error::Err;
 
 use core::{
     convert::Infallible,

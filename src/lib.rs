@@ -137,7 +137,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
     #[inline(always)]
     pub fn validate(self) -> Result<Self, GStringError<V::Err>> {
-        V::validate(self.as_str()).map_err(GStringError::Validation)?;
+        V::validate(self).map_err(GStringError::Validation)?;
         Ok(self)
     }
 

@@ -486,3 +486,255 @@ fn try_new_str_and_len_match_string_oracle() {
         );
     }
 }
+
+// ---------------------------------------------------------------------------
+// 10. count() — Unicode scalar values, oracle: String::chars().count()
+// ---------------------------------------------------------------------------
+
+struct CountCase {
+    label: &'static str,
+    input: &'static str,
+    /// oracle: input.chars().count() via String
+    expected_count: usize,
+}
+
+#[test]
+fn count_matches_string_chars_count() {
+    type G = GString<NoValidation, 0, 255, false>;
+
+    let cases: &[CountCase] = &[
+        CountCase {
+            label: "empty",
+            input: "",
+            expected_count: 0,
+        },
+        CountCase {
+            label: "pure ASCII — each byte is one char",
+            input: "hello",
+            expected_count: 5,
+        },
+        CountCase {
+            label: "2-byte chars — é is one char, two bytes",
+            input: "héllo",
+            expected_count: 5, // same char count as "hello"
+        },
+        CountCase {
+            label: "3-byte CJK — each hiragana is one char",
+            input: "こんにちは",
+            expected_count: 5,
+        },
+        CountCase {
+            label: "4-byte emoji — one scalar value",
+            input: "🦀",
+            expected_count: 1,
+        },
+        CountCase {
+            label: "mixed widths",
+            input: "a🦀é",
+            expected_count: 3,
+        },
+        CountCase {
+            label: "count != len for multibyte",
+            input: "hi 🌍",
+            // "hi " = 3 bytes/chars, 🌍 = 4 bytes but 1 char → total 4 chars
+            expected_count: 4,
+        },
+    ];
+
+    for case in cases {
+        let g = G::try_new(case.input)
+            .unwrap_or_else(|e| panic!("[{}] try_new failed: {:?}", case.label, e));
+
+        // Oracle
+        let oracle_count = String::from(case.input).chars().count();
+
+        assert_eq!(
+            g.count(),
+            oracle_count,
+            "[{}] count() vs String oracle mismatch",
+            case.label
+        );
+        assert_eq!(
+            g.count(),
+            case.expected_count,
+            "[{}] count() mismatch",
+            case.label
+        );
+    }
+}
+
+#[test]
+fn count_differs_from_len_for_multibyte() {
+    type G = GString<NoValidation, 0, 255, false>;
+
+    // Verify the key property: for multibyte strings, count() != len()
+    let cases: &[(&str, bool)] = &[
+        ("hello", false),     // pure ASCII: count == len
+        ("héllo", true),      // 'é' is 2 bytes: count < len
+        ("こんにちは", true), // 3 bytes each: count < len
+        ("🦀", true),         // 4 bytes: count < len
+        ("", false),          // empty: both zero
+    ];
+
+    for (input, should_differ) in cases {
+        let g = G::try_new(input).unwrap();
+        let oracle = String::from(*input);
+
+        let count_ne_len = g.count() != g.len();
+        assert_eq!(
+            count_ne_len, *should_differ,
+            "count() != len() should be {} for {:?}",
+            should_differ, input
+        );
+
+        // Always agree with String
+        assert_eq!(
+            g.count(),
+            oracle.chars().count(),
+            "oracle mismatch for {:?}",
+            input
+        );
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 11. capacity() — always equals MAX const param
+// ---------------------------------------------------------------------------
+
+#[test]
+fn capacity_equals_max_const() {
+    // capacity() is purely a function of the MAX const — independent of content
+
+    struct CapCase {
+        label: &'static str,
+        capacity: usize,
+    }
+
+    let cases: &[CapCase] = &[
+        CapCase {
+            label: "MAX=8",
+            capacity: 8,
+        },
+        CapCase {
+            label: "MAX=16",
+            capacity: 16,
+        },
+        CapCase {
+            label: "MAX=64",
+            capacity: 64,
+        },
+        CapCase {
+            label: "MAX=255",
+            capacity: 255,
+        },
+    ];
+
+    // We verify by constructing with different MAX values and asserting capacity()
+    // Each branch uses a distinct type alias.
+    {
+        let _ = cases; // suppress unused warning; actual checks are per-type below
+    }
+
+    let g8 = GString::<NoValidation, 0, 8, false>::try_new("hi").unwrap();
+    let g16 = GString::<NoValidation, 0, 16, false>::try_new("hi").unwrap();
+    let g64 = GString::<NoValidation, 0, 64, false>::try_new("hi").unwrap();
+    let g255 = GString::<NoValidation, 0, 255, false>::try_new("hi").unwrap();
+
+    assert_eq!(g8.capacity(), 8, "MAX=8 capacity mismatch");
+    assert_eq!(g16.capacity(), 16, "MAX=16 capacity mismatch");
+    assert_eq!(g64.capacity(), 64, "MAX=64 capacity mismatch");
+    assert_eq!(g255.capacity(), 255, "MAX=255 capacity mismatch");
+}
+
+#[test]
+fn capacity_independent_of_content() {
+    // Same MAX, different content lengths — capacity() must not change
+    type G = GString<NoValidation, 0, 32, false>;
+
+    let inputs = ["", "a", "hello", "🦀🦀🦀"];
+
+    for input in inputs {
+        let g = G::try_new(input).unwrap();
+        assert_eq!(g.capacity(), 32, "capacity() changed for input {:?}", input);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 12. is_full() — true iff len == MAX
+// ---------------------------------------------------------------------------
+
+struct IsFullCase {
+    label: &'static str,
+    input: &'static str,
+    expected: bool,
+}
+
+#[test]
+fn is_full_when_len_equals_max() {
+    type G = GString<NoValidation, 0, 5, false>;
+
+    let cases: &[IsFullCase] = &[
+        IsFullCase {
+            label: "empty — not full",
+            input: "",
+            expected: false,
+        },
+        IsFullCase {
+            label: "partial — not full",
+            input: "ab",
+            expected: false,
+        },
+        IsFullCase {
+            label: "one below MAX — not full",
+            input: "abcd",
+            expected: false,
+        },
+        IsFullCase {
+            label: "exactly MAX — full",
+            input: "abcde",
+            expected: true,
+        },
+    ];
+
+    for case in cases {
+        let g = G::try_new(case.input)
+            .unwrap_or_else(|e| panic!("[{}] try_new failed: {:?}", case.label, e));
+
+        assert_eq!(
+            g.is_full(),
+            case.expected,
+            "[{}] is_full() mismatch (len={}, capacity={})",
+            case.label,
+            g.len(),
+            g.capacity()
+        );
+
+        // Invariant: is_full() iff len() == capacity()
+        assert_eq!(
+            g.is_full(),
+            g.len() == g.capacity(),
+            "[{}] is_full() inconsistent with len() == capacity()",
+            case.label
+        );
+    }
+}
+
+#[test]
+fn is_full_with_multibyte_chars() {
+    // MAX is in bytes — a string of multibyte chars can fill the buffer
+    // "🦀" = 4 bytes, so MAX=4 is full with one emoji
+    type G = GString<NoValidation, 0, 4, false>;
+
+    let g = G::try_new("🦀").unwrap();
+    assert!(
+        g.is_full(),
+        "single emoji filling MAX=4 bytes should be full"
+    );
+    assert_eq!(g.count(), 1, "one char");
+    assert_eq!(g.len(), 4, "four bytes");
+    assert_eq!(g.capacity(), 4);
+
+    // Contrast: an ASCII string of 3 bytes in the same type is not full
+    let g2 = G::try_new("abc").unwrap();
+    assert!(!g2.is_full());
+}

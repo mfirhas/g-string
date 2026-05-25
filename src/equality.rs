@@ -47,3 +47,19 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         *self == other.as_str()
     }
 }
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> PartialEq<String>
+    for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    fn eq(&self, other: &String) -> bool {
+        self == other.as_str()
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    PartialEq<GString<V, MIN, MAX, ASCII_ONLY>> for String
+{
+    fn eq(&self, other: &GString<V, MIN, MAX, ASCII_ONLY>) -> bool {
+        self == other.as_str()
+    }
+}

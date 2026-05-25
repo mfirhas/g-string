@@ -58,3 +58,19 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Some((*self).cmp(other.as_str()))
     }
 }
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> PartialOrd<String>
+    for GString<V, MIN, MAX, ASCII_ONLY>
+{
+    fn partial_cmp(&self, other: &String) -> Option<core::cmp::Ordering> {
+        Some(self.as_str().cmp(other.as_str()))
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    PartialOrd<GString<V, MIN, MAX, ASCII_ONLY>> for String
+{
+    fn partial_cmp(&self, other: &GString<V, MIN, MAX, ASCII_ONLY>) -> Option<core::cmp::Ordering> {
+        Some(self.as_str().cmp(other.as_str()))
+    }
+}

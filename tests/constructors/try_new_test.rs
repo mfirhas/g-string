@@ -901,3 +901,185 @@ mod grapheme_tests {
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// 14. Borrow<str>
+//
+//     The contract from std::borrow::Borrow:
+//       "If T: Borrow<U>, then &T and &U must hash and compare the same way."
+//
+//     We verify:
+//       a) borrow() returns the same content as as_str()
+//       b) the borrowed &str compares equal to the original &str (PartialEq)
+//       c) both hash identically (via HashMap key lookup)
+//       d) works in generic contexts that accept Borrow<str>
+// ---------------------------------------------------------------------------
+
+#[test]
+fn borrow_str_returns_same_content_as_as_str() {
+    use std::borrow::Borrow;
+
+    type G = GString<NoValidation, 0, 255, false>;
+
+    struct Case {
+        label: &'static str,
+        input: &'static str,
+    }
+
+    let cases: &[Case] = &[
+        Case {
+            label: "empty",
+            input: "",
+        },
+        Case {
+            label: "ascii",
+            input: "hello",
+        },
+        Case {
+            label: "unicode",
+            input: "こんにちは",
+        },
+        Case {
+            label: "emoji",
+            input: "🦀",
+        },
+        Case {
+            label: "mixed",
+            input: "hi é 🌍",
+        },
+    ];
+
+    for case in cases {
+        let g = G::try_new(case.input).unwrap();
+        let borrowed: &str = g.borrow();
+
+        // Must be identical to as_str()
+        assert_eq!(
+            borrowed,
+            g.as_str(),
+            "[{}] borrow() != as_str()",
+            case.label
+        );
+
+        // Oracle: same as the original &str
+        let oracle = String::from(case.input);
+        assert_eq!(
+            borrowed,
+            oracle.as_str(),
+            "[{}] borrow() != original str",
+            case.label
+        );
+    }
+}
+
+#[test]
+fn borrow_str_hash_matches_str_hash() {
+    // std::borrow::Borrow requires that if T: Borrow<U>, then
+    // Hash::hash(t) == Hash::hash(t.borrow()).
+    // We verify this by using GString as a HashMap key and looking up
+    // by &str — which only works if the hashes agree.
+
+    use std::collections::HashMap;
+
+    type G = GString<NoValidation, 0, 64, false>;
+
+    struct Case {
+        label: &'static str,
+        input: &'static str,
+        value: u32,
+    }
+
+    let cases: &[Case] = &[
+        Case {
+            label: "empty",
+            input: "",
+            value: 1,
+        },
+        Case {
+            label: "ascii",
+            input: "hello",
+            value: 2,
+        },
+        Case {
+            label: "unicode",
+            input: "héllo",
+            value: 3,
+        },
+        Case {
+            label: "emoji",
+            input: "🦀",
+            value: 4,
+        },
+    ];
+
+    // Insert using GString keys
+    let mut map: HashMap<G, u32> = HashMap::new();
+    for case in cases {
+        let g = G::try_new(case.input).unwrap();
+        map.insert(g, case.value);
+    }
+
+    // Look up using &str — relies on Borrow<str> + Hash/Eq coherence.
+    // HashMap::get takes &Q where K: Borrow<Q>, so we turbofish ::<str>
+    // to avoid &&str being inferred.
+    for case in cases {
+        let found = map.get::<str>(case.input);
+        assert_eq!(
+            found,
+            Some(&case.value),
+            "[{}] HashMap lookup by &str failed — Borrow hash/eq contract violated",
+            case.label
+        );
+    }
+}
+
+#[test]
+fn borrow_str_works_in_generic_borrow_context() {
+    // Confirm GString can be passed to a function that accepts B: Borrow<str>
+    use std::borrow::Borrow;
+
+    fn first_char<B: Borrow<str>>(s: B) -> Option<char> {
+        s.borrow().chars().next()
+    }
+
+    type G = GString<NoValidation, 0, 64, false>;
+
+    struct Case {
+        label: &'static str,
+        input: &'static str,
+        expected: Option<char>,
+    }
+
+    let cases: &[Case] = &[
+        Case {
+            label: "empty",
+            input: "",
+            expected: None,
+        },
+        Case {
+            label: "ascii",
+            input: "hello",
+            expected: Some('h'),
+        },
+        Case {
+            label: "unicode",
+            input: "こんにちは",
+            expected: Some('こ'),
+        },
+        Case {
+            label: "emoji",
+            input: "🦀abc",
+            expected: Some('🦀'),
+        },
+    ];
+
+    for case in cases {
+        let g = G::try_new(case.input).unwrap();
+        assert_eq!(
+            first_char(g),
+            case.expected,
+            "[{}] generic Borrow<str> context failed",
+            case.label
+        );
+    }
+}

@@ -27,13 +27,13 @@ pub const DEFAULT_ASCII_ONLY: bool = false;
 pub type GStringNV<const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> =
     GString<NoValidation, MIN, MAX, ASCII_ONLY>;
 
-pub trait Validator: Copy {
+pub trait Validator: Copy + PartialEq + Eq {
     type Err: Error + Send + Sync + 'static;
 
     fn validate(s: impl AsRef<str>) -> Result<(), Self::Err>;
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NoValidation;
 
 impl Validator for NoValidation {

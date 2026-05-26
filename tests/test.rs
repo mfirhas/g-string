@@ -18,3 +18,6 @@ mod macros_test;
 
 #[path = "iterator_test.rs"]
 mod iterator_test;
+
+#[path = "mutation_test.rs"]
+mod mutation_test;

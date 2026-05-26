@@ -36,6 +36,20 @@ impl<VE> From<Err> for GStringError<VE> {
     }
 }
 
+#[cfg(test)]
+mod err_test {
+    use super::Err;
+
+    #[test]
+    fn test_g_string_err() {
+        let fmt_err = |err: Err| -> String { err.to_string() };
+
+        assert_eq!(fmt_err(Err::TooShort(0)), "minimum length allowed is 0");
+        assert_eq!(fmt_err(Err::TooLong(100)), "maximum length allowed is 100");
+        assert_eq!(fmt_err(Err::NotAscii), "only ASCII characters are allowed");
+    }
+}
+
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GStringError<VE> {

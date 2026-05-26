@@ -9,7 +9,7 @@ OUT_FILE := $(OUT_DIR)/lcov.info
 
 test:
 	@echo "Running tests..."
-	@cargo test --test test --all-features
+	@cargo test --all-features
 	@cargo test -q --doc --all-features
 
 lcov:

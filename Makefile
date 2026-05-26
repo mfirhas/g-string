@@ -55,10 +55,10 @@ all:
 	@cargo fmt --all
 	@sleep 1
 	@echo "Running clippy--------------------------------------------------"
-	@cargo clippy --all-features
+	@cargo clippy --all-features -- -D warnings
 	@sleep 1
 	@echo "Running doc"
-	@cargo doc --all-features
+	@cargo doc --all-features --no-deps
 	@sleep 1
 	@echo "Running tests---------------------------------------------------"
 	@cargo test --all-features

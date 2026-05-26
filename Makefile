@@ -61,5 +61,5 @@ all:
 	@cargo doc --all-features
 	@sleep 1
 	@echo "Running tests---------------------------------------------------"
-	@cargo test --test --all-features
+	@cargo test --all-features
 	@cargo test -q --doc --all-features

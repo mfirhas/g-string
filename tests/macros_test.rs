@@ -7,12 +7,20 @@ use g_string::{
 // Custom validator used across tests
 // -------------------------------------------------------------------------
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct NoDigitsError;
+
+impl core::fmt::Display for NoDigitsError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "digits are not allowed")
+    }
+}
+
+impl core::error::Error for NoDigitsError {}
+
 /// Rejects any string containing a digit.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct NoDigits;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct NoDigitsError;
 
 impl Validator for NoDigits {
     type Err = NoDigitsError;
@@ -25,14 +33,6 @@ impl Validator for NoDigits {
         }
     }
 }
-
-impl core::fmt::Display for NoDigitsError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self)
-    }
-}
-
-impl core::error::Error for NoDigitsError {}
 
 // -------------------------------------------------------------------------
 // gstring! — default form (literal only)
@@ -150,44 +150,54 @@ fn gstring_default_form_is_const() {
 // by the compiler (const eval panic), not at runtime. They cannot be
 // expressed as `#[should_panic]` tests — they simply won't compile.
 //
-// Each case below is commented out with the exact compiler error it produces.
-// Uncomment individually to verify the behaviour manually.
+// Each test below is valid Rust except for the one commented line.
+// Uncomment that line to observe the compile error described above it.
 // -------------------------------------------------------------------------
 
-// TOO LONG — input exceeds MAX
-//
 // error: evaluation of constant value failed
 //   ... maximum length exceeds MAX
-//
-// let _g = gstring!("hello", NoValidation, 0, 4, false);
+#[test]
+fn gstring_compile_err_too_long() {
+    // "hello" is 5 bytes but MAX = 4
+    // let _g = gstring!("hello", NoValidation, 0, 4, false);
+}
 
-// TOO SHORT — input is below MIN
-//
 // error: evaluation of constant value failed
 //   ... minimum length below MIN
-//
-// let _g = gstring!("hi", NoValidation, 3, 32, false);
+#[test]
+fn gstring_compile_err_too_short() {
+    // "hi" is 2 bytes but MIN = 3
+    // let _g = gstring!("hi", NoValidation, 3, 32, false);
+}
 
-// NON-ASCII — ASCII_ONLY = true but input contains multibyte character
-//
 // error: evaluation of constant value failed
 //   ... only ASCII characters are allowed
-//
-// let _g = gstring!("café", NoValidation, 0, 32, true);
+#[test]
+fn gstring_compile_err_non_ascii() {
+    // "café" contains a non-ASCII byte but ASCII_ONLY = true
+    // let _g = gstring!("café", NoValidation, 0, 32, true);
+}
 
-// MIN > MAX — violates the const assert inside check_bounds
-//
 // error: evaluation of constant value failed
 //   ... MIN cannot be bigger than MAX
-//
-// let _g = gstring!("hello", NoValidation, 10, 5, false);
+#[test]
+fn gstring_compile_err_min_gt_max() {
+    // MIN = 10 > MAX = 5 violates the const assert in check_bounds
+    // let _g = gstring!("hello", NoValidation, 10, 5, false);
+}
 
-// VALIDATOR VIOLATION — gstring! does NOT invoke the Validator trait;
-// validation is a runtime concern handled by try_new. The const path
-// only checks bounds and ASCII. This means the following compiles fine
-// even though NoDigits would reject it at runtime via try_new:
-//
-// let _g = gstring!("abc123", NoDigits, 0, 32, false); // compiles — no validator in const path
+// NOTE: gstring! does NOT invoke the Validator trait. Validation is a
+// runtime concern handled by try_new. The const path only checks bounds
+// and ASCII, so the following compiles even though NoDigits rejects digits:
+#[test]
+fn gstring_compile_ok_validator_not_invoked_in_const() {
+    // This compiles — validator is silently skipped in the const path.
+    // let _g = gstring!("abc123", NoDigits, 0, 32, false);
+    //
+    // The runtime equivalent correctly returns Err(Validation(_)):
+    let result = GString::<NoDigits, 0, 32, false>::try_new("abc123");
+    assert!(matches!(result, Err(GStringError::Validation(_))));
+}
 
 // -------------------------------------------------------------------------
 // gstring! — __new panic cases

@@ -30,7 +30,7 @@ pub const DEFAULT_ASCII_ONLY: bool = false;
 pub type GStringNV<const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> =
     GString<NoValidation, MIN, MAX, ASCII_ONLY>;
 
-pub trait Validator: Copy + PartialEq + Eq {
+pub trait Validator: Clone {
     type Err: Error + Send + Sync + 'static;
 
     fn validate(s: impl AsRef<str>) -> Result<(), Self::Err>;
@@ -139,9 +139,9 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     }
 
     #[inline(always)]
-    pub fn validate(&self) -> Result<Self, GStringError<V::Err>> {
+    pub fn validate(self) -> Result<Self, GStringError<V::Err>> {
         V::validate(&self).map_err(GStringError::Validation)?;
-        Ok(*self)
+        Ok(self)
     }
 
     #[inline]

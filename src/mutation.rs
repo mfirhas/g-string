@@ -277,7 +277,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         I: IntoIterator<Item = S>,
         S: AsRef<str>,
     {
-        let mut tmp = *self;
+        let mut tmp = self.clone();
 
         for s in iter {
             tmp.push_str(s.as_ref())?;
@@ -292,7 +292,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     where
         I: IntoIterator<Item = char>,
     {
-        let mut tmp = *self;
+        let mut tmp = self.clone();
 
         for ch in iter {
             tmp.push(ch)?;

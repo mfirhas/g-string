@@ -239,3 +239,15 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> c
         self.as_str().hash(state)
     }
 }
+
+impl<V: Validator, const MAX: usize, const ASCII_ONLY: bool> Default
+    for GString<V, 0, MAX, ASCII_ONLY>
+{
+    fn default() -> Self {
+        Self {
+            buf: [0u8; MAX],
+            len: 0,
+            _validator: PhantomData,
+        }
+    }
+}

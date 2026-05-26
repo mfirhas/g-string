@@ -245,3 +245,17 @@ fn roundtrip_embedded_in_struct() {
     let restored: UserRecord = serde_json::from_str(&json).unwrap();
     assert_eq!(original, restored);
 }
+
+// deserializing invalid types
+#[test]
+fn test_numbers() {
+    let json = r#"{"username":123, "display_name":"Bob Jones"}"#;
+    let record = serde_json::from_str::<UserRecord>(json);
+    assert!(record.is_err());
+    assert!(
+        record
+            .unwrap_err()
+            .to_string()
+            .contains("a string with length between 3 and 32"),
+    );
+}

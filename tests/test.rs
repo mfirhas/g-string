@@ -12,3 +12,6 @@ mod order_test;
 
 #[path = "error_test.rs"]
 mod error_test;
+
+#[path = "macros_test.rs"]
+mod macros_test;

@@ -15,3 +15,6 @@ mod error_test;
 
 #[path = "macros_test.rs"]
 mod macros_test;
+
+#[path = "iterator_test.rs"]
+mod iterator_test;

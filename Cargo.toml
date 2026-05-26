@@ -23,7 +23,9 @@ path = "tests/test.rs"
 default = ["std"]
 std = ["alloc"]
 alloc = []
+serde = ["dep:serde"]
 grapheme = ["unicode-segmentation"]
 
 [dependencies]
 unicode-segmentation = { version = "1", optional = true }
+serde = { version = "1", default-features = false, optional = true }

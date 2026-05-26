@@ -9,6 +9,9 @@ mod macros;
 mod mutation;
 mod order;
 
+#[cfg(feature = "serde")]
+mod serde;
+
 pub use error::GStringError;
 
 use error::Err;

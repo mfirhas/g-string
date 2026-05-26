@@ -41,7 +41,7 @@ mod err_test {
     use super::Err;
 
     #[test]
-    fn test_g_string_err() {
+    fn test_err() {
         let fmt_err = |err: Err| -> String { err.to_string() };
 
         assert_eq!(fmt_err(Err::TooShort(0)), "minimum length allowed is 0");

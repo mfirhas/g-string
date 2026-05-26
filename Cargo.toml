@@ -29,3 +29,7 @@ grapheme = ["unicode-segmentation"]
 [dependencies]
 unicode-segmentation = { version = "1", optional = true }
 serde = { version = "1", default-features = false, optional = true }
+
+[dev-dependencies]
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }

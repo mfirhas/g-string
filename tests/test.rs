@@ -21,3 +21,7 @@ mod iterator_test;
 
 #[path = "mutation_test.rs"]
 mod mutation_test;
+
+#[cfg(feature = "serde")]
+#[path = "serde_test.rs"]
+mod serde_test;

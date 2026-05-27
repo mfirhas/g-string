@@ -36,6 +36,8 @@ pub trait Validator: Clone {
     fn validate(s: impl AsRef<str>) -> Result<(), Self::Err>;
 }
 
+pub trait AllowEmpty {}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NoValidation;
 
@@ -46,6 +48,8 @@ impl Validator for NoValidation {
         Ok(())
     }
 }
+
+impl AllowEmpty for NoValidation {}
 
 #[derive(Copy, Clone, Eq)]
 pub struct GString<
@@ -240,9 +244,10 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> c
     }
 }
 
-impl<V: Validator, const MAX: usize, const ASCII_ONLY: bool> Default
+impl<V: Validator + AllowEmpty, const MAX: usize, const ASCII_ONLY: bool> Default
     for GString<V, 0, MAX, ASCII_ONLY>
 {
+    #[inline]
     fn default() -> Self {
         Self {
             buf: [0u8; MAX],

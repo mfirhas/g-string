@@ -347,17 +347,10 @@ fn clear_empties_string() {
 
     for &input in &cases {
         let mut gs: GString<NoValidation, 0, 64, false> = GString::try_new(input).unwrap();
-        gs.clear().unwrap();
+        gs.clear();
         assert_eq!(gs.as_str(), "", "clear {:?}", input);
         assert_eq!(gs.len(), 0);
     }
-}
-
-#[test]
-fn clear_blocked_when_min_nonzero() {
-    let mut gs: GString<NoValidation, 1, 64, false> = GString::try_new("hello").unwrap();
-    assert!(matches!(gs.clear(), Err(GStringError::Mutation(_))));
-    assert_eq!(gs.as_str(), "hello");
 }
 
 // -------------------------------------------------------------------------
@@ -648,9 +641,5 @@ fn failed_mutation_leaves_string_unchanged() {
 
     let mut gs: GString<NoValidation, 3, 64, false> = GString::try_new(original).unwrap();
     let _ = gs.truncate(2);
-    assert_eq!(gs.as_str(), original);
-
-    let mut gs: GString<NoValidation, 1, 64, false> = GString::try_new(original).unwrap();
-    let _ = gs.clear();
     assert_eq!(gs.as_str(), original);
 }

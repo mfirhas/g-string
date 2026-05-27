@@ -1,6 +1,6 @@
 use core::fmt::Write;
 
-use crate::{GString, GStringError, Validator};
+use crate::{AllowEmpty, GString, GStringError, Validator};
 
 // ------------------------------------------------------------------------------------
 // MUTATION APIs
@@ -170,18 +170,6 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(())
     }
 
-    pub fn clear(&mut self) -> Result<(), GStringError<V::Err>> {
-        if MIN != 0 {
-            return Err(GStringError::Mutation(
-                "cannot clear GString if MIN is not zero",
-            ));
-        }
-
-        *self = Self::try_new("")?;
-
-        Ok(())
-    }
-
     #[cfg(feature = "alloc")]
     pub fn replace(&mut self, from: &str, to: &str) -> Result<(), GStringError<V::Err>> {
         // .replace requires allocation
@@ -266,6 +254,15 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         *self = Self::try_new(candidate)?;
 
         Ok(())
+    }
+}
+
+impl<V: Validator + AllowEmpty, const MAX: usize, const ASCII_ONLY: bool>
+    GString<V, 0, MAX, ASCII_ONLY>
+{
+    #[inline]
+    pub fn clear(&mut self) {
+        *self = Self::default()
     }
 }
 

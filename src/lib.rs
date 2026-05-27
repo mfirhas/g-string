@@ -9,6 +9,8 @@ mod macros;
 mod mutation;
 mod order;
 
+pub use macros::NotValidatedGString;
+
 #[cfg(feature = "serde")]
 mod serde;
 

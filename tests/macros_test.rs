@@ -40,7 +40,7 @@ impl Validator for NoDigits {
 
 #[test]
 fn gstring_default_form() {
-    let g = gstring!("hello");
+    let g = gstring!("hello").validate().unwrap();
 
     // Value is correct
     assert_eq!(g.as_str(), "hello");
@@ -55,14 +55,14 @@ fn gstring_default_form() {
 
 #[test]
 fn gstring_default_form_empty() {
-    let g = gstring!("");
+    let g = gstring!("").validate().unwrap();
     assert_eq!(g.as_str(), "");
     assert_eq!(g.len(), 0);
 }
 
 #[test]
 fn gstring_default_form_unicode() {
-    let g = gstring!("café");
+    let g = gstring!("café").validate().unwrap();
     assert_eq!(g.as_str(), "café");
 }
 
@@ -72,7 +72,7 @@ fn gstring_default_form_unicode() {
 
 #[test]
 fn gstring_with_validator() {
-    let g = gstring!("hello", NoDigits);
+    let g = gstring!("hello", NoDigits).validate().unwrap();
     assert_eq!(g.as_str(), "hello");
     let _: GString<NoDigits, DEFAULT_MIN, DEFAULT_MAX, DEFAULT_ASCII_ONLY> = g;
 }
@@ -83,7 +83,7 @@ fn gstring_with_validator() {
 
 #[test]
 fn gstring_with_validator_and_min() {
-    let g = gstring!("hello", NoValidation, 1);
+    let g = gstring!("hello", NoValidation, 1).validate().unwrap();
     assert_eq!(g.as_str(), "hello");
     let _: GString<NoValidation, 1, DEFAULT_MAX, DEFAULT_ASCII_ONLY> = g;
 }
@@ -94,7 +94,7 @@ fn gstring_with_validator_and_min() {
 
 #[test]
 fn gstring_with_validator_min_max() {
-    let g = gstring!("hi", NoValidation, 1, 32);
+    let g = gstring!("hi", NoValidation, 1, 32).validate().unwrap();
     assert_eq!(g.as_str(), "hi");
     assert_eq!(g.capacity(), 32);
     let _: GString<NoValidation, 1, 32, DEFAULT_ASCII_ONLY> = g;
@@ -106,7 +106,9 @@ fn gstring_with_validator_min_max() {
 
 #[test]
 fn gstring_full_form() {
-    let g = gstring!("hello", NoValidation, 1, 32, false);
+    let g = gstring!("hello", NoValidation, 1, 32, false)
+        .validate()
+        .unwrap();
     assert_eq!(g.as_str(), "hello");
     assert_eq!(g.capacity(), 32);
     let _: GString<NoValidation, 1, 32, false> = g;
@@ -114,14 +116,18 @@ fn gstring_full_form() {
 
 #[test]
 fn gstring_full_form_ascii_only() {
-    let g = gstring!("hello", NoValidation, 0, 32, true);
+    let g = gstring!("hello", NoValidation, 0, 32, true)
+        .validate()
+        .unwrap();
     assert_eq!(g.as_str(), "hello");
     let _: GString<NoValidation, 0, 32, true> = g;
 }
 
 #[test]
 fn gstring_full_form_custom_validator() {
-    let g = gstring!("hello", NoDigits, 1, 32, false);
+    let g = gstring!("hello", NoDigits, 1, 32, false)
+        .validate()
+        .unwrap();
     assert_eq!(g.as_str(), "hello");
     let _: GString<NoDigits, 1, 32, false> = g;
 }
@@ -132,16 +138,24 @@ fn gstring_full_form_custom_validator() {
 
 #[test]
 fn gstring_is_const() {
-    const G: GString<NoValidation, 0, 32, false> = gstring!("const", NoValidation, 0, 32, false);
-    assert_eq!(G.as_str(), "const");
+    const G: g_string::NotValidatedGString<NoValidation, 0, 32, false> =
+        gstring!("const", NoValidation, 0, 32, false);
+    assert_eq!(G.validate().unwrap().as_str(), "const");
 }
 
 #[test]
 fn gstring_default_form_is_const() {
+    type Temp = g_string::NotValidatedGString<NoValidation, 0, 255, false>;
     // The simple form also expands to a const block
-    const G: GString = gstring!("hello");
-    assert_eq!(G.as_str(), "hello");
+    const G: Temp = gstring!("hello");
+    assert_eq!(G.validate().unwrap().as_str(), "hello");
 }
+
+// won't compile, expected
+// #[test]
+// fn test_gstring_invalid_const_checks() {
+//     let a = gstring!("hi", (), 3);
+// }
 
 // -------------------------------------------------------------------------
 // gstring! — compile-time failure cases

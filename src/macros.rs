@@ -1,4 +1,22 @@
-use crate::{Err, GString, Validator};
+use crate::{Err, GString, GStringError, Validator};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct NotValidatedGString<
+    V: Validator,
+    const MIN: usize,
+    const MAX: usize,
+    const ASCII_ONLY: bool,
+>(GString<V, MIN, MAX, ASCII_ONLY>);
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    NotValidatedGString<V, MIN, MAX, ASCII_ONLY>
+{
+    #[inline(always)]
+    pub fn validate(self) -> Result<GString<V, MIN, MAX, ASCII_ONLY>, GStringError<V::Err>> {
+        V::validate(&self.0).map_err(GStringError::Validation)?;
+        Ok(self.0)
+    }
+}
 
 macro_rules! errpanic {
     ($expr:expr) => {
@@ -21,11 +39,11 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, MIN, MAX, ASCII_ONLY>
 {
     #[doc(hidden)]
-    pub const fn __new(s: &str) -> Self {
+    pub const fn __new(s: &str) -> NotValidatedGString<V, MIN, MAX, ASCII_ONLY> {
         let ret = errpanic!(Self::stack_allocate(s));
         errpanic!(ret.check_bounds());
         errpanic!(ret.check_ascii());
-        ret
+        NotValidatedGString(ret)
     }
 }
 
@@ -58,7 +76,7 @@ macro_rules! gstring {
         gstring!($s, $validator, $min, $max, { $crate::DEFAULT_ASCII_ONLY })
     };
     ($s:literal, $validator:ty, $min:expr, $max:expr, $ascii_only:expr) => {{
-        const RET: $crate::GString<$validator, $min, $max, $ascii_only> =
+        const RET: $crate::NotValidatedGString<$validator, $min, $max, $ascii_only> =
             $crate::GString::<$validator, $min, $max, $ascii_only>::__new($s);
         RET
     }};

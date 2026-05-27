@@ -59,3 +59,66 @@ where
         deserializer.deserialize_str(GStringVisitor(PhantomData))
     }
 }
+
+// GSecret serde
+#[cfg(feature = "secret")]
+mod secret_serde {
+    use crate::{GSecret, GStringError, Validator};
+    use core::{fmt, marker::PhantomData};
+    use serde::{
+        Deserialize, Deserializer,
+        de::{self, Visitor},
+    };
+
+    struct GSecretVisitor<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>(
+        PhantomData<V>,
+    );
+
+    impl<'de, V, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> Visitor<'de>
+        for GSecretVisitor<V, MIN, MAX, ASCII_ONLY>
+    where
+        V: Validator,
+        GStringError<V::Err>: fmt::Display,
+    {
+        type Value = GSecret<V, MIN, MAX, ASCII_ONLY>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            write!(
+                formatter,
+                "a secret string between {} and {}{}",
+                MIN,
+                MAX,
+                if ASCII_ONLY { " (ASCII only)" } else { "" }
+            )
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            GSecret::try_new(v).map_err(de::Error::custom)
+        }
+
+        #[cfg(feature = "alloc")]
+        fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            GSecret::try_from(v).map_err(de::Error::custom)
+        }
+    }
+
+    impl<'de, V, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> Deserialize<'de>
+        for GSecret<V, MIN, MAX, ASCII_ONLY>
+    where
+        V: Validator,
+        GStringError<V::Err>: fmt::Display,
+    {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            deserializer.deserialize_str(GSecretVisitor(PhantomData))
+        }
+    }
+}

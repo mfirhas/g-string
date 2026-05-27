@@ -94,7 +94,7 @@ fn insert_char_at_various_positions() {
         let mut oracle = initial.to_string();
         oracle.insert(idx, ch);
 
-        let mut gs: GString<NoValidation, 0, 64, false> = GString::try_new(initial).unwrap();
+        let mut gs: GString<(), 0, 64, false> = GString::try_new(initial).unwrap();
         gs.insert(idx, ch).unwrap();
         assert_eq!(
             gs.as_str(),

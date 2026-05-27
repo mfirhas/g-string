@@ -49,6 +49,14 @@ impl Validator for NoValidation {
     }
 }
 
+impl Validator for () {
+    type Err = Infallible;
+
+    fn validate(_: impl AsRef<str>) -> Result<(), Self::Err> {
+        Ok(())
+    }
+}
+
 impl AllowEmpty for NoValidation {}
 
 #[derive(Copy, Clone, Eq)]

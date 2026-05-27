@@ -295,3 +295,244 @@ fn visit_string_is_called() {
     assert!(result.is_ok());
     assert_eq!(result.unwrap().as_str(), "hello");
 }
+
+// --------------- GSecret tests ---------------
+#[cfg(all(test, feature = "serde", feature = "secret"))]
+mod gsecret_serde_tests {
+    use core::str::FromStr;
+    use g_string::{GSecret, GString, NoValidation};
+    use serde::{Deserialize, Serialize};
+
+    type GStr = GString<NoValidation, 0, 64, false>;
+    type Secret = GSecret<NoValidation, 0, 64, false>;
+
+    // ------------------------------------------------------------
+    // ORACLE STRUCTS
+    // ------------------------------------------------------------
+
+    #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+    struct Oracle {
+        normal: String,
+
+        #[serde(skip_serializing)]
+        secret: String,
+    }
+
+    #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+    struct Mixed {
+        normal: GStr,
+
+        #[serde(skip_serializing)]
+        secret: Secret,
+    }
+
+    // ------------------------------------------------------------
+    // GSTRING SERDE
+    // ------------------------------------------------------------
+
+    #[test]
+    fn gstring_serializes_as_plain_string() {
+        let value = GStr::try_new("hello").unwrap();
+
+        let json = serde_json::to_string(&value).unwrap();
+
+        assert_eq!(json, "\"hello\"");
+    }
+
+    #[test]
+    fn gstring_deserializes_from_plain_string() {
+        let value: GStr = serde_json::from_str("\"hello\"").unwrap();
+
+        assert_eq!(value.as_str(), "hello");
+    }
+
+    #[test]
+    fn gstring_roundtrip_matches_oracle_string() {
+        let oracle = String::from("hello world");
+
+        let gstring = GStr::try_new(&oracle).unwrap();
+
+        let oracle_json = serde_json::to_string(&oracle).unwrap();
+        let gstring_json = serde_json::to_string(&gstring).unwrap();
+
+        assert_eq!(oracle_json, gstring_json);
+
+        let deserialized: GStr = serde_json::from_str(&gstring_json).unwrap();
+
+        assert_eq!(deserialized.as_str(), oracle);
+    }
+
+    // ------------------------------------------------------------
+    // GSECRET DESERIALIZATION
+    // ------------------------------------------------------------
+
+    #[test]
+    fn gsecret_deserializes_from_plain_string() {
+        let secret: Secret = serde_json::from_str("\"hunter2\"").unwrap();
+
+        secret.expose(|s| {
+            assert_eq!(s, "hunter2");
+        });
+    }
+
+    #[test]
+    fn gsecret_from_str_matches_deserialization() {
+        let a = Secret::from_str("hunter2").unwrap();
+
+        let b: Secret = serde_json::from_str("\"hunter2\"").unwrap();
+
+        assert_eq!(a, b);
+    }
+
+    // ------------------------------------------------------------
+    // MIXED STRUCT TESTS
+    // ------------------------------------------------------------
+
+    #[test]
+    fn mixed_struct_deserializes_correctly() {
+        let json = r#"
+        {
+            "normal": "visible",
+            "secret": "hidden"
+        }
+        "#;
+
+        let mixed: Mixed = serde_json::from_str(json).unwrap();
+
+        assert_eq!(mixed.normal.as_str(), "visible");
+
+        mixed.secret.expose(|s| {
+            assert_eq!(s, "hidden");
+        });
+    }
+
+    #[test]
+    fn mixed_struct_serialization_skips_secret() {
+        let mixed = Mixed {
+            normal: GStr::try_new("visible").unwrap(),
+            secret: Secret::try_new("hidden").unwrap(),
+        };
+
+        let json = serde_json::to_string(&mixed).unwrap();
+
+        assert_eq!(json, r#"{"normal":"visible"}"#);
+    }
+
+    // ------------------------------------------------------------
+    // ORACLE COMPATIBILITY
+    // ------------------------------------------------------------
+
+    #[test]
+    fn mixed_struct_matches_oracle_serialization() {
+        let oracle = Oracle {
+            normal: String::from("visible"),
+            secret: String::from("hidden"),
+        };
+
+        let mixed = Mixed {
+            normal: GStr::try_new("visible").unwrap(),
+            secret: Secret::try_new("hidden").unwrap(),
+        };
+
+        let oracle_json = serde_json::to_string(&oracle).unwrap();
+        let mixed_json = serde_json::to_string(&mixed).unwrap();
+
+        assert_eq!(oracle_json, mixed_json);
+    }
+
+    #[test]
+    fn mixed_struct_matches_oracle_deserialization() {
+        let json = r#"
+        {
+            "normal": "visible",
+            "secret": "hidden"
+        }
+        "#;
+
+        let oracle: Oracle = serde_json::from_str(json).unwrap();
+        let mixed: Mixed = serde_json::from_str(json).unwrap();
+
+        assert_eq!(mixed.normal.as_str(), oracle.normal);
+
+        mixed.secret.expose(|s| {
+            assert_eq!(s, oracle.secret);
+        });
+    }
+
+    // ------------------------------------------------------------
+    // VALIDATION FAILURE TESTS
+    // ------------------------------------------------------------
+
+    #[test]
+    fn gstring_invalid_json_type_fails() {
+        let result: Result<GStr, _> = serde_json::from_str("123");
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn gsecret_invalid_json_type_fails() {
+        let result: Result<Secret, _> = serde_json::from_str("123");
+
+        assert!(result.is_err());
+    }
+
+    // ------------------------------------------------------------
+    // ASCII MODE TESTS
+    // ------------------------------------------------------------
+
+    #[test]
+    fn ascii_gstring_rejects_unicode() {
+        type Ascii = GString<NoValidation, 0, 64, true>;
+
+        let result: Result<Ascii, _> = serde_json::from_str("\"中\"");
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn ascii_gsecret_rejects_unicode() {
+        type AsciiSecret = GSecret<NoValidation, 0, 64, true>;
+
+        let result: Result<AsciiSecret, _> = serde_json::from_str("\"中\"");
+
+        assert!(result.is_err());
+    }
+
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn visit_string_is_called() {
+        use serde::de::IntoDeserializer;
+        use serde::de::value::{Error as DeError, StringDeserializer};
+
+        type TestGSecret = GSecret<NoValidation, 1, 64, false>;
+
+        // StringDeserializer calls visit_string, not visit_str
+        let deserializer: StringDeserializer<DeError> = "hello".to_owned().into_deserializer();
+
+        let result = TestGSecret::deserialize(deserializer);
+        assert!(result.is_ok());
+        result.unwrap().expose(|secret| assert_eq!(secret, "hello"));
+    }
+
+    // deserializing invalid types
+    #[test]
+    fn test_numbers_ascii_only() {
+        #[derive(Debug, Serialize, Deserialize, PartialEq)]
+        struct UserRecord {
+            #[serde(skip_serializing)]
+            username: GSecret<(), 3, 5, true>,
+            display_name: GString<(), 1, 64>,
+        }
+
+        let json = r#"{"username":123, "display_name":"Bob Jones"}"#;
+        let record = serde_json::from_str::<UserRecord>(json);
+        assert!(record.is_err());
+        assert!(
+            record
+                .unwrap_err()
+                .to_string()
+                .contains("a secret string between 3 and 5 (ASCII only)"),
+        );
+    }
+}

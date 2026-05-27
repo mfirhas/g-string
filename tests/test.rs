@@ -25,3 +25,7 @@ mod mutation_test;
 #[cfg(feature = "serde")]
 #[path = "serde_test.rs"]
 mod serde_test;
+
+#[cfg(feature = "secret")]
+#[path = "gsecret_test.rs"]
+mod gsecret_test;

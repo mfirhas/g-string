@@ -1,10 +1,27 @@
-use core::{fmt::Debug, str::FromStr};
+use core::{convert::Infallible, fmt::Debug, str::FromStr};
 
-use crate::{GString, GStringError, Validator};
+use crate::{GString, GStringError, NoValidation, Validator};
 
-#[derive(Clone, PartialEq, Eq, Hash)]
-pub struct GSecret<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> {
+#[derive(Clone, PartialEq, Eq)]
+pub struct GSecret<
+    V: Validator = NoValidation,
+    const MIN: usize = 0,
+    const MAX: usize = 255,
+    const ASCII_ONLY: bool = false,
+> {
     inner: GString<V, MIN, MAX, ASCII_ONLY>,
+}
+
+impl GSecret {
+    #[inline]
+    pub fn try_default<S>(secret: S) -> Result<Self, GStringError<Infallible>>
+    where
+        S: AsRef<str>,
+    {
+        Ok(Self {
+            inner: GString::try_default(secret)?,
+        })
+    }
 }
 
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
@@ -102,5 +119,14 @@ where
         value.zeroize();
 
         secret
+    }
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> core::hash::Hash
+    for GSecret<V, MIN, MAX, ASCII_ONLY>
+{
+    #[inline]
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.inner.hash(state)
     }
 }

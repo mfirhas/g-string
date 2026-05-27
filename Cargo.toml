@@ -7,6 +7,7 @@ license = "MIT"
 exclude = [
   "**/*_test.rs",
   "tests/**",
+  "benches/**",
   "examples/**",
   "Makefile",
   "AGENTS.md",
@@ -28,11 +29,13 @@ default = ["std"]
 std = ["alloc"]
 alloc = []
 serde = ["dep:serde"]
+secret = ["dep:zeroize"]
 grapheme = ["unicode-segmentation"]
 
 [dependencies]
-unicode-segmentation = { version = "1", optional = true }
 serde = { version = "1", default-features = false, optional = true }
+zeroize = { version = "1", default-features = false, optional = true }
+unicode-segmentation = { version = "1", optional = true }
 
 [dev-dependencies]
 serde_json = "1"

@@ -9,6 +9,12 @@ mod macros;
 mod mutation;
 mod order;
 
+#[cfg(feature = "secret")]
+mod gsecret;
+
+#[cfg(feature = "secret")]
+pub use gsecret::GSecret;
+
 pub use macros::NotValidatedGString;
 
 #[cfg(feature = "serde")]
@@ -264,5 +270,17 @@ impl<V: Validator + AllowEmpty, const MAX: usize, const ASCII_ONLY: bool> Defaul
             len: 0,
             _validator: PhantomData,
         }
+    }
+}
+
+#[cfg(feature = "secret")]
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    GString<V, MIN, MAX, ASCII_ONLY>
+{
+    pub fn zeroize(&mut self) {
+        use zeroize::Zeroize;
+
+        self.buf.zeroize();
+        self.len.zeroize();
     }
 }

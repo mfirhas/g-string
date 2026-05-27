@@ -39,6 +39,14 @@ where
     fn visit_str<E: de::Error>(self, v: &str) -> Result<Self::Value, E> {
         GString::try_new(v).map_err(de::Error::custom)
     }
+
+    #[cfg(feature = "alloc")]
+    fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        GString::try_from(v).map_err(de::Error::custom)
+    }
 }
 
 impl<'de, V, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> Deserialize<'de>

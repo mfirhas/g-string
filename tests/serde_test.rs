@@ -259,3 +259,39 @@ fn test_numbers() {
             .contains("a string with length between 3 and 32"),
     );
 }
+
+// deserializing invalid types
+#[test]
+fn test_numbers_ascii_only() {
+    #[derive(Debug, Serialize, Deserialize, PartialEq)]
+    struct UserRecord {
+        username: GString<(), 3, 5, true>,
+        display_name: Gs<1, 64>,
+    }
+
+    let json = r#"{"username":123, "display_name":"Bob Jones"}"#;
+    let record = serde_json::from_str::<UserRecord>(json);
+    assert!(record.is_err());
+    assert!(
+        record
+            .unwrap_err()
+            .to_string()
+            .contains("a string with length between 3 and 5 (ASCII only)"),
+    );
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn visit_string_is_called() {
+    use serde::de::IntoDeserializer;
+    use serde::de::value::{Error as DeError, StringDeserializer};
+
+    type TestGString = GString<NoValidation, 1, 64, false>;
+
+    // StringDeserializer calls visit_string, not visit_str
+    let deserializer: StringDeserializer<DeError> = "hello".to_owned().into_deserializer();
+
+    let result = TestGString::deserialize(deserializer);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap().as_str(), "hello");
+}

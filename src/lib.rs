@@ -67,6 +67,8 @@ impl Validator for () {
 
 impl AllowEmpty for NoValidation {}
 
+impl AllowEmpty for () {}
+
 #[derive(Copy, Clone, Eq)]
 pub struct GString<
     V: Validator = NoValidation,

@@ -26,8 +26,8 @@ harness = false
 
 [features]
 default = ["std"]
-std = ["alloc"]
-alloc = []
+std = ["alloc", "serde?/std"]
+alloc = ["serde?/alloc"]
 serde = ["dep:serde"]
 secret = ["dep:zeroize"]
 grapheme = ["unicode-segmentation"]

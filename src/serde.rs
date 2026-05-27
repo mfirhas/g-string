@@ -6,6 +6,12 @@ use serde::{
 use crate::{GString, GStringError, Validator};
 use core::{fmt, marker::PhantomData};
 
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> Serialize
     for GString<V, MIN, MAX, ASCII_ONLY>
 {

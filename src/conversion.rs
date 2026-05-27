@@ -29,6 +29,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> A
 }
 
 /// String -> GString
+#[cfg(feature = "alloc")]
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> TryFrom<String>
     for GString<V, MIN, MAX, ASCII_ONLY>
 {

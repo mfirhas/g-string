@@ -13,7 +13,7 @@ type Secret<const MIN: usize, const MAX: usize, const ASCII: bool> =
 fn try_new_success() {
     let s = Secret::<0, 64, false>::try_new("hello").unwrap();
 
-    s.expose(|v| {
+    s.reveal(|v| {
         assert_eq!(v, "hello");
     });
 }
@@ -22,7 +22,7 @@ fn try_new_success() {
 fn try_new_via_from_str() {
     let s: Secret<0, 64, false> = "hello".parse().unwrap();
 
-    s.expose(|v| {
+    s.reveal(|v| {
         assert_eq!(v, "hello");
     });
 }
@@ -31,7 +31,7 @@ fn try_new_via_from_str() {
 fn try_from_str_ref() {
     let s = Secret::<0, 64, false>::try_from("hello").unwrap();
 
-    s.expose(|v| {
+    s.reveal(|v| {
         assert_eq!(v, "hello");
     });
 }
@@ -40,7 +40,7 @@ fn try_from_str_ref() {
 fn try_from_string() {
     let s = Secret::<0, 64, false>::try_from(String::from("hello")).unwrap();
 
-    s.expose(|v| {
+    s.reveal(|v| {
         assert_eq!(v, "hello");
     });
 }
@@ -56,8 +56,8 @@ fn clone_creates_equal_secret() {
 
     assert_eq!(a, b);
 
-    a.expose(|va| {
-        b.expose(|vb| {
+    a.reveal(|va| {
+        b.reveal(|vb| {
             assert_eq!(va, vb);
         })
     });
@@ -104,7 +104,7 @@ fn hash_consistency() {
 fn expose_does_not_escape() {
     let s = Secret::<0, 64, false>::try_new("secret").unwrap();
 
-    let len = s.expose(|v| {
+    let len = s.reveal(|v| {
         assert_eq!(v, "secret");
         v.len()
     });
@@ -116,7 +116,7 @@ fn expose_does_not_escape() {
 fn expose_allows_transformation() {
     let s = Secret::<0, 64, false>::try_new("abc").unwrap();
 
-    let upper = s.expose(|v| v.to_uppercase());
+    let upper = s.reveal(|v| v.to_uppercase());
 
     assert_eq!(upper, "ABC");
 }
@@ -131,7 +131,7 @@ fn manual_inherent_zeroize_clears_data() {
 
     s.zeroize();
 
-    s.expose(|v| {
+    s.reveal(|v| {
         // behavior depends on your GString.zeroize implementation
         assert!(v.is_empty() || v == "");
     });
@@ -143,7 +143,7 @@ fn manual_zeroize_clears_data() {
 
     <GSecret as zeroize::Zeroize>::zeroize(&mut s);
 
-    s.expose(|v| {
+    s.reveal(|v| {
         // behavior depends on your GString.zeroize implementation
         assert!(v.is_empty() || v == "");
     });

@@ -370,7 +370,7 @@ mod gsecret_serde_tests {
     fn gsecret_deserializes_from_plain_string() {
         let secret: Secret = serde_json::from_str("\"hunter2\"").unwrap();
 
-        secret.expose(|s| {
+        secret.reveal(|s| {
             assert_eq!(s, "hunter2");
         });
     }
@@ -401,7 +401,7 @@ mod gsecret_serde_tests {
 
         assert_eq!(mixed.normal.as_str(), "visible");
 
-        mixed.secret.expose(|s| {
+        mixed.secret.reveal(|s| {
             assert_eq!(s, "hidden");
         });
     }
@@ -454,7 +454,7 @@ mod gsecret_serde_tests {
 
         assert_eq!(mixed.normal.as_str(), oracle.normal);
 
-        mixed.secret.expose(|s| {
+        mixed.secret.reveal(|s| {
             assert_eq!(s, oracle.secret);
         });
     }
@@ -512,7 +512,7 @@ mod gsecret_serde_tests {
 
         let result = TestGSecret::deserialize(deserializer);
         assert!(result.is_ok());
-        result.unwrap().expose(|secret| assert_eq!(secret, "hello"));
+        result.unwrap().reveal(|secret| assert_eq!(secret, "hello"));
     }
 
     // deserializing invalid types

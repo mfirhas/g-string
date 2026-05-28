@@ -37,7 +37,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         })
     }
 
-    pub fn expose<R>(&self, func: impl FnOnce(&str) -> R) -> R {
+    pub fn reveal<R>(&self, func: impl FnOnce(&str) -> R) -> R {
         func(self.inner.as_str())
     }
 

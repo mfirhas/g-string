@@ -9,6 +9,8 @@ exclude = [
   "tests/**",
   "benches/**",
   "examples/**",
+  ".github/**",
+  ".gitignore",
   "Makefile",
   "AGENTS.md",
 ]

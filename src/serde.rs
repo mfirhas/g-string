@@ -76,6 +76,12 @@ mod secret_serde {
         de::{self, Visitor},
     };
 
+    #[cfg(feature = "alloc")]
+    extern crate alloc;
+
+    #[cfg(feature = "alloc")]
+    use alloc::string::String;
+
     struct GSecretVisitor<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>(
         PhantomData<V>,
     );

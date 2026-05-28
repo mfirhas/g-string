@@ -123,6 +123,21 @@ where
     }
 }
 
+impl<
+    GSTRINGV: Validator,
+    GSECRETV: Validator,
+    const MIN: usize,
+    const MAX: usize,
+    const ASCII_ONLY: bool,
+> TryFrom<GString<GSTRINGV, MIN, MAX, ASCII_ONLY>> for GSecret<GSECRETV, MIN, MAX, ASCII_ONLY>
+{
+    type Error = GStringError<GSECRETV::Err>;
+
+    fn try_from(value: GString<GSTRINGV, MIN, MAX, ASCII_ONLY>) -> Result<Self, Self::Error> {
+        Self::try_new(value.as_str())
+    }
+}
+
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> core::hash::Hash
     for GSecret<V, MIN, MAX, ASCII_ONLY>
 {

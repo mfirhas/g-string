@@ -45,6 +45,18 @@ fn try_from_string() {
     });
 }
 
+#[test]
+fn try_from_g_string() {
+    let mut s: g_string::GString = g_string::GString::try_new("im_secret").unwrap();
+    let mut secret: GSecret = s.try_into().unwrap();
+    secret.reveal(|v| assert_eq!(v, s, "should be equal"));
+    s.zeroize();
+    secret.zeroize();
+    assert_eq!(s, "", "should be emptied");
+    secret.reveal(|v| assert_eq!(v, "", "should be emptied"));
+    secret.reveal(|v| assert_eq!(v, s, "should be equal"));
+}
+
 // ------------------------------------------------------------
 // 2. Clone behavior
 // ------------------------------------------------------------

@@ -104,6 +104,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> T
     }
 }
 
+#[cfg(feature = "alloc")]
 impl<V, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> TryFrom<String>
     for GSecret<V, MIN, MAX, ASCII_ONLY>
 where

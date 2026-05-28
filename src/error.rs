@@ -1,5 +1,6 @@
 use core::{error::Error, fmt::Debug, fmt::Display};
 
+// Internal error for const fn
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Err {
@@ -50,13 +51,19 @@ mod err_test {
     }
 }
 
+/// GString error type.
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GStringError<VE> {
+    /// When string is shorter than MIN=usize.
     TooShort(usize),
+    /// When string is longer than MAX=usize.
     TooLong(usize),
+    /// When ASCII_ONLY is true but string is not all ASCII.
     NotAscii,
+    /// When validation failed with VE = Validator associated error type.
     Validation(VE),
+    /// When mutation failed with error message.
     Mutation(&'static str),
 }
 

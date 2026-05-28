@@ -84,6 +84,15 @@ impl<'a, V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: boo
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, MIN, MAX, ASCII_ONLY>
 {
+    /// Construct GString from iterator of `AsRef<str>`.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use g_string::GString;
+    ///
+    /// let result: GString = GString::try_from_iter(["12", "3a"]).unwrap();
+    /// assert_eq!(result, "123a");
+    /// ```
     pub fn try_from_iter<I, S>(iter: I) -> Result<Self, GStringError<V::Err>>
     where
         I: IntoIterator<Item = S>,
@@ -114,6 +123,15 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Self::try_new(candidate)
     }
 
+    /// Construct GString from iterator of chars
+    ///
+    /// # Examples
+    /// ```rust
+    /// use g_string::GString;
+    ///
+    /// let result: GString = GString::try_from_chars(['a', 'b', 'c']).unwrap();
+    /// assert_eq!(result, "abc");
+    /// ```
     pub fn try_from_chars<I>(iter: I) -> Result<Self, GStringError<V::Err>>
     where
         I: IntoIterator<Item = char>,

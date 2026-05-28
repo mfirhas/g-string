@@ -8,6 +8,7 @@ use crate::{AllowEmpty, GString, GStringError, Validator};
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, MIN, MAX, ASCII_ONLY>
 {
+    /// Push a char at the end of string with invariants preserved.
     pub fn push(&mut self, ch: char) -> Result<(), GStringError<V::Err>> {
         // char takes up to 4 bytes
         let mut buf = [0u8; 4];
@@ -16,6 +17,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         self.push_str(encoded)
     }
 
+    /// Push string at the end of string with invariants preserved.
     pub fn push_str(&mut self, s: &str) -> Result<(), GStringError<V::Err>> {
         let mut buf = [0u8; MAX];
 
@@ -44,6 +46,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(())
     }
 
+    /// Insert a char at specific index with invariants preserved.
     pub fn insert(&mut self, idx: usize, ch: char) -> Result<(), GStringError<V::Err>> {
         let mut buf = [0u8; 4];
         let encoded = ch.encode_utf8(&mut buf);
@@ -51,6 +54,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         self.insert_str(idx, encoded)
     }
 
+    /// Insert string at specific index with invariants preserved.
     pub fn insert_str(&mut self, idx: usize, string: &str) -> Result<(), GStringError<V::Err>> {
         if !self.as_str().is_char_boundary(idx) {
             return Err(GStringError::Mutation("idx is not a char boundary"));
@@ -92,6 +96,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(())
     }
 
+    /// Pop a char from the end of string with invariants preserved.
     pub fn pop(&mut self) -> Result<Option<char>, GStringError<V::Err>> {
         if self.is_empty() {
             return Ok(None);
@@ -120,6 +125,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         }
     }
 
+    /// Removes a char at specific index with invariants preserved.
     pub fn remove(&mut self, idx: usize) -> Result<char, GStringError<V::Err>> {
         if !self.as_str().is_char_boundary(idx) {
             return Err(GStringError::Mutation("idx is not a char boundary"));
@@ -152,6 +158,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(ch)
     }
 
+    /// Truncates to a new length with invariants preserved.
     pub fn truncate(&mut self, new_len: usize) -> Result<(), GStringError<V::Err>> {
         if new_len >= self.len {
             return Ok(());
@@ -170,6 +177,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(())
     }
 
+    /// Replaces `from` with `to` in string with invariants preserved.
     #[cfg(feature = "alloc")]
     pub fn replace(&mut self, from: &str, to: &str) -> Result<(), GStringError<V::Err>> {
         // .replace requires allocation
@@ -180,6 +188,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(())
     }
 
+    /// Replaces with range with invariants preserved.
     pub fn replace_range<R>(
         &mut self,
         range: R,
@@ -260,6 +269,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 impl<V: Validator + AllowEmpty, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, 0, MAX, ASCII_ONLY>
 {
+    /// Clear the string, only work if Validator implements `AllowEmpty` and MIN == 0.
     #[inline]
     pub fn clear(&mut self) {
         *self = Self::default()
@@ -269,6 +279,16 @@ impl<V: Validator + AllowEmpty, const MAX: usize, const ASCII_ONLY: bool>
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, MIN, MAX, ASCII_ONLY>
 {
+    /// Extend existing string with iterator of `AsRef<str>` with invariants preserved.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use g_string::GString;
+    ///
+    /// let mut gs: GString<(), 0, 100, false> = GString::try_new("hello").unwrap();
+    /// gs.try_extend(["123", "456"].iter().copied());
+    /// assert_eq!(gs.as_str(), "hello123456");
+    /// ```
     pub fn try_extend<I, S>(&mut self, iter: I) -> Result<(), GStringError<V::Err>>
     where
         I: IntoIterator<Item = S>,
@@ -285,6 +305,16 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(())
     }
 
+    /// Extend existing string with iterator of chars with invariants preserved.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use g_string::GString;
+    ///
+    /// let mut gs: GString<(), 0, 100, false> = GString::try_new("hello").unwrap();
+    /// gs.try_extend_chars(['@', 'z'].iter().copied());
+    /// assert_eq!(gs.as_str(), "hello@z");
+    /// ```
     pub fn try_extend_chars<I>(&mut self, iter: I) -> Result<(), GStringError<V::Err>>
     where
         I: IntoIterator<Item = char>,

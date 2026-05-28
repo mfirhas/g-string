@@ -31,21 +31,35 @@ use core::{
     marker::PhantomData,
 };
 
+/// Default value of lower bound.
 pub const DEFAULT_MIN: usize = 0;
+
+/// Default value of upper bound.
 pub const DEFAULT_MAX: usize = 255;
+
+/// Default value is ASCII only or not.
 pub const DEFAULT_ASCII_ONLY: bool = false;
 
+/// GString alias without validation.
 pub type GStringNV<const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> =
     GString<NoValidation, MIN, MAX, ASCII_ONLY>;
 
+/// Validation trait
+///
+/// Usually it's implemented by marker type.
 pub trait Validator: Clone {
     type Err: Error + Send + Sync + 'static;
 
+    /// Validate the string.
     fn validate(s: impl AsRef<str>) -> Result<(), Self::Err>;
 }
 
+/// Mark validation allowing empty string.
+///
+/// This will enable `Default` impl and `clear()` method provided that MIN == 0.
 pub trait AllowEmpty {}
 
+/// Validator implementation without validation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NoValidation;
 
@@ -69,6 +83,50 @@ impl AllowEmpty for NoValidation {}
 
 impl AllowEmpty for () {}
 
+/// `GString` contains stack-allocated, Copy, bounded string along with ASCII toggle and embedded validation logic.
+///
+/// # Generic parameters:
+/// - `V: Validator`: default to [`NoValidation`], it will validate the string upon creation and deserialization.
+/// - `const MIN: usize`: default to [`DEFAULT_MIN`], in bytes, determine minimum length.
+/// - `const MAX: usize`: default to [`DEFAULT_MAX`], in bytes, determine maximum length.
+/// - `const ASCII_ONLY: bool`: default to [`DEFAULT_ASCII_ONLY`], determine whether GString may contains arbitrary or ASCII only UTF-8 encoded string.
+///
+/// # Usage
+/// You can use this type in several ways:
+/// - Defaulted to default generic params: `let a: GString = GString::try_new("anjay!!").unwrap()`.
+/// - Defaulted to default generic params with `try_default(...)`: `let a = GString::try_default("anjay!!").unwrap()`.
+/// - Using type aliases. You can declare some aliases matching the behavior you want: `type Username = GString<UsernameValidation, 3, 20, true>`.
+/// - Declaring each generic params from left to right. Declaration must be from left to right with omission allowed on right-most params: `let a = GString::<(), 2>::try_new("anjay!!").unwrap()`.
+///
+/// # Examples
+/// ```rust
+/// use g_string::{GString, Validator, GStringError};
+///
+/// let a: GString = GString::try_new("anjay!!").unwrap();
+/// assert_eq!(a, "anjay!!");
+///
+/// let a = GString::try_default("anjay!!").unwrap();
+/// assert_eq!(a, "anjay!!");
+///
+/// #[derive(Debug, Clone)]
+/// struct UsernameValidation;
+///
+/// impl Validator for UsernameValidation {
+///     type Err = GStringError<&'static str>;
+///
+///     fn validate(_: impl AsRef<str>) -> Result<(), Self::Err> {
+///         // some validation logics here...
+///         Ok(())
+///     }   
+/// }
+///
+/// type Username = GString<UsernameValidation, 3, 20, true>;
+/// let a = Username::try_new("wanjay!!🤣");
+/// assert!(a.is_err()); // because '🤣' is not ASCII.
+///
+/// let a = GString::<(), 2, 4>::try_new("anjay!!");
+/// assert!(a.is_err()); // MAX is 4.
+/// ```
 #[derive(Copy, Clone, Eq)]
 pub struct GString<
     V: Validator = NoValidation,
@@ -82,6 +140,15 @@ pub struct GString<
 }
 
 impl GString {
+    /// Construct with default generic params.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use g_string::GString;
+    ///
+    /// let a = GString::try_default("anjay!!").unwrap();
+    /// assert_eq!(a, "anjay!!");
+    /// ```
     #[inline]
     pub fn try_default<S>(s: S) -> Result<Self, GStringError<Infallible>>
     where
@@ -94,6 +161,15 @@ impl GString {
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GString<V, MIN, MAX, ASCII_ONLY>
 {
+    /// Construct new GString. All invariants from generic params will be imposed here.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use g_string::GString;
+    ///
+    /// let a: GString = GString::try_new("anjay!!").unwrap();
+    /// assert_eq!(a, "anjay!!");
+    /// ```
     #[inline]
     pub fn try_new<S>(s: S) -> Result<Self, GStringError<V::Err>>
     where
@@ -107,6 +183,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         gstring.validate()
     }
 
+    // Allocate `s` in stack without validations(yet).
     const fn stack_allocate(s: &str) -> Result<Self, Err> {
         let bytes = s.as_bytes();
         let len = bytes.len();
@@ -129,6 +206,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         })
     }
 
+    // Check upper and lower bounds.
     #[inline]
     const fn check_bounds(&self) -> Result<(), Err> {
         const {
@@ -144,6 +222,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(())
     }
 
+    // Check whether ASCII only met.
     #[inline]
     const fn check_ascii(&self) -> Result<(), Err> {
         if ASCII_ONLY {
@@ -160,12 +239,14 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         Ok(())
     }
 
+    // Execute validation logic.
     #[inline(always)]
     pub fn validate(self) -> Result<Self, GStringError<V::Err>> {
         V::validate(&self).map_err(GStringError::Validation)?;
         Ok(self)
     }
 
+    /// Show `GString` as `&str`.
     #[inline]
     pub const fn as_str(&self) -> &str {
         // SAFETY:
@@ -176,6 +257,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         }
     }
 
+    /// Get length of GString in bytes.
     #[inline]
     pub const fn len(&self) -> usize {
         self.len
@@ -194,16 +276,19 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         self.graphemes(true).count()
     }
 
+    /// Check if empty.
     #[inline]
     pub const fn is_empty(&self) -> bool {
         self.len == 0
     }
 
+    /// Tells maximum capacity returning MAX.
     #[inline]
     pub const fn capacity(&self) -> usize {
         MAX
     }
 
+    /// Tells if maximum capacity met.
     #[inline]
     pub const fn is_full(&self) -> bool {
         self.len == MAX

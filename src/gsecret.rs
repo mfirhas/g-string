@@ -2,6 +2,17 @@ use core::{convert::Infallible, fmt::Debug, str::FromStr};
 
 use crate::{GString, GStringError, NoValidation, Validator};
 
+/// `GSecret` is a type for containing secret.
+///
+/// Unlike `GString`, it's not Copy for security reason.
+///
+/// No Display implementation and debugging is redacted.
+///
+/// It Implements [zeroize](https://docs.rs/zeroize) and can be triggered manually or automatically on drop.
+///
+/// You can reveal the secret inside a closure to do something with it.
+///
+/// If you reveal and clone or take ownership of the revealed string, it goes beyond responsibility of GSecret to zeroize it.
 #[derive(Clone, PartialEq, Eq)]
 pub struct GSecret<
     V: Validator = NoValidation,
@@ -13,6 +24,7 @@ pub struct GSecret<
 }
 
 impl GSecret {
+    /// Construct GSecret with default generic params.
     #[inline]
     pub fn try_default<S>(secret: S) -> Result<Self, GStringError<Infallible>>
     where
@@ -27,6 +39,7 @@ impl GSecret {
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     GSecret<V, MIN, MAX, ASCII_ONLY>
 {
+    /// Construct GSecret with defined generic params.
     #[inline]
     pub fn try_new<S>(secret: S) -> Result<Self, GStringError<V::Err>>
     where
@@ -37,10 +50,22 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
         })
     }
 
+    /// Reveals the secret.
+    ///
+    /// It's useful if you want to do something with the secret, e.g. authentication, authorization, etc.
+    ///
+    /// # WARNING
+    /// Revealing the secret will expose reference to string of the secret itself.
+    /// As long as you don't bring it outside of closure scope, it's fine.
+    /// If you bring it outside, it goes beyond responsibility of GSecret to zeroize it.
+    ///
     pub fn reveal<R>(&self, func: impl FnOnce(&str) -> R) -> R {
         func(self.inner.as_str())
     }
 
+    /// Manually zeroize the secret.
+    ///
+    /// It's useful if you want to zeroize before the secret is out-of-scope/dopped.
     #[inline]
     pub fn zeroize(&mut self) {
         self.inner.zeroize();

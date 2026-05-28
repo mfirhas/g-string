@@ -2,8 +2,13 @@
 name = "g-string"
 version = "0.0.0"
 edition = "2024"
-description = "Generic String"
+authors = ["Muhammad Fathir Irhas <fathir.irhas@gmail.com>"]
+description = "Stack-allocated string type with generic configurations."
 license = "MIT"
+repository = "https://github.com/mfirhas/g-string"
+documentation = "https://docs.rs/g-string"
+keywords = ["string", "generic", "secret", "type-safe", "no-std"]
+categories = ["text-processing", "data-structures"]
 exclude = [
   "**/*_test.rs",
   "tests/**",

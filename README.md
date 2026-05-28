@@ -1,5 +1,12 @@
 # `g-string`
 
+![Rust](https://img.shields.io/badge/Rust-000000?style=flat&logo=rust&logoColor=white)
+[![Crates.io](https://img.shields.io/crates/v/g-string.svg)](https://crates.io/crates/g-string)
+[![ci](https://github.com/mfirhas/g-string/actions/workflows/ci.yml/badge.svg)](https://github.com/mfirhas/g-string/actions/workflows/ci.yml)
+[![Documentation](https://docs.rs/g-string/badge.svg)](https://docs.rs/g-string)
+[![codecov](https://codecov.io/gh/mfirhas/g-string/branch/master/graph/badge.svg)](https://codecov.io/gh/mfirhas/g-string)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/mfirhas/g-string/blob/master/LICENSE)
+
 `g-string` — a stack-allocated, `Copy`, and generically configurable UTF-8 string type featuring:
 
 * Stack allocation with no heap allocation in core operations.

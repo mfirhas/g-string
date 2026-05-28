@@ -34,6 +34,7 @@ The crate centers around two primary types:
 * `GString` — a validated bounded string type.
 * `GSecret` — a secret string type with zeroization and redacted formatting.
 
+### **GString**
 `GString` is generically configurable through const generics and validation traits:
 
 * minimum length
@@ -45,7 +46,7 @@ All construction and mutation APIs preserve these invariants automatically.
 
 `g-string` maintains full interoperability with Rust’s string ecosystem through `Deref<Target = str>`, conversion traits, iterator support, formatting traits, and optional `serde` integration.
 
-Core goals of the crate include:
+Core goals of the `GString` include:
 
 * deterministic memory usage
 * zero heap allocation in core operations
@@ -54,7 +55,24 @@ Core goals of the crate include:
 * compile-time configurability
 * invariant-preserving mutation APIs
 * `no_std` compatibility
-* secrets handling
+* validation embedded into type
+
+### **GSecret**
+`GSecret` is wrapper around `GString` providing type for secret information such as password, API keys, tokens, private keys, etc. Unlike `GString`, `GSecret` is not Copy for security reason,
+to prevent it from having multiple copies in many places. It's an owned type instead, getting moved and having scope before getting dropped. Normally, when a string or buffer is dropped, the memory is simply marked as reusable. The bytes are usually not overwritten immediately. That means the old secret may still physically exist in RAM until something else reuses that memory region. It's even worse in garbage-collected languages,
+where secrets might linger longer before getting collected. This becomes a problem in scenarios such as:
+- memory dumps
+- crash reports
+- swap/pagefile leakage
+- use-after-free bugs
+- forensic analysis
+- accidental memory exposure
+- debugging tools
+- cold boot attacks
+
+To avoid this lingering secrets, we need *zeroization*. `GSecret` is equipped with this mechanism to zeroizes the secrets automatically on drop(or manually). So, even the memory is still there, the data already zeroized.
+This zeroization also avoid compiler optimization like dead-code elimination and optimization removal. `GSecret` has no Display implementation and debug is redacted. To work with the secret, method `reveal` is provided
+making sure secret reference stays within closure scope. This type prevents secrets from leaking easily.
 
 ## Example
 

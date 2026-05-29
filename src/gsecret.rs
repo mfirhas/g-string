@@ -1,6 +1,8 @@
 use core::{convert::Infallible, fmt::Debug, str::FromStr};
 
-use crate::{GString, GStringError, NoValidation, Validator};
+use crate::{
+    DEFAULT_ASCII_ONLY, DEFAULT_MAX, DEFAULT_MIN, GString, GStringError, NoValidation, Validator,
+};
 
 /// `GSecret` is a type for containing secret.
 ///
@@ -16,9 +18,9 @@ use crate::{GString, GStringError, NoValidation, Validator};
 #[derive(Clone, PartialEq, Eq)]
 pub struct GSecret<
     V: Validator = NoValidation,
-    const MIN: usize = 0,
-    const MAX: usize = 255,
-    const ASCII_ONLY: bool = false,
+    const MIN: usize = DEFAULT_MIN,
+    const MAX: usize = DEFAULT_MAX,
+    const ASCII_ONLY: bool = DEFAULT_ASCII_ONLY,
 > {
     inner: GString<V, MIN, MAX, ASCII_ONLY>,
 }

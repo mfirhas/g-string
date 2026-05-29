@@ -48,6 +48,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     }
 }
 
+#[cfg(feature = "alloc")]
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> PartialEq<String>
     for GString<V, MIN, MAX, ASCII_ONLY>
 {
@@ -56,6 +57,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> P
     }
 }
 
+#[cfg(feature = "alloc")]
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     PartialEq<GString<V, MIN, MAX, ASCII_ONLY>> for String
 {

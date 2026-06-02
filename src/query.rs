@@ -55,7 +55,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     /// Show `GString` as bytes.
     #[inline(always)]
     pub const fn as_bytes(&self) -> &[u8] {
-        &self.buf
+        unsafe { core::slice::from_raw_parts(self.buf.as_ptr(), self.len) }
     }
 }
 

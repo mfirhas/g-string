@@ -350,7 +350,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     /// Checks if all characters in this string are within the ASCII range.
     #[inline]
     pub fn is_ascii(&self) -> bool {
-        ASCII_ONLY
+        self.as_str().is_ascii()
     }
 
     /// Compares two strings in a case-insensitive ASCII manner.

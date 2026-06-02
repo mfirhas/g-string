@@ -277,17 +277,6 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> D
     }
 }
 
-impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> core::ops::Deref
-    for GString<V, MIN, MAX, ASCII_ONLY>
-{
-    type Target = str;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        self.as_str()
-    }
-}
-
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     core::borrow::Borrow<str> for GString<V, MIN, MAX, ASCII_ONLY>
 {

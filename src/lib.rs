@@ -8,12 +8,19 @@ mod iterator;
 mod macros;
 mod mutation;
 mod order;
+mod query;
+pub use query::Pattern;
+
+mod pattern_impl;
 
 #[cfg(feature = "secret")]
 mod gsecret;
 
 #[cfg(feature = "secret")]
 pub use gsecret::GSecret;
+
+#[cfg(feature = "grapheme")]
+pub use unicode_segmentation::{Graphemes, UnicodeSegmentation};
 
 pub use macros::NotValidatedGString;
 
@@ -244,54 +251,6 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     pub fn validate(self) -> Result<Self, GStringError<V::Err>> {
         V::validate(&self).map_err(GStringError::Validation)?;
         Ok(self)
-    }
-
-    /// Show `GString` as `&str`.
-    #[inline]
-    pub const fn as_str(&self) -> &str {
-        // SAFETY:
-        // GString is always built from valid UTF-8 encoded string.
-        unsafe {
-            let slice = core::slice::from_raw_parts(self.buf.as_ptr(), self.len);
-            core::str::from_utf8_unchecked(slice)
-        }
-    }
-
-    /// Get length of GString in bytes.
-    #[inline]
-    pub const fn len(&self) -> usize {
-        self.len
-    }
-
-    /// Counts Unicode scalar values (`char`).
-    #[inline]
-    pub fn count(&self) -> usize {
-        self.chars().count()
-    }
-
-    /// Counts user-perceived characters (grapheme clusters).
-    #[cfg(feature = "grapheme")]
-    pub fn grapheme_count(&self) -> usize {
-        use unicode_segmentation::UnicodeSegmentation;
-        self.graphemes(true).count()
-    }
-
-    /// Check if empty.
-    #[inline]
-    pub const fn is_empty(&self) -> bool {
-        self.len == 0
-    }
-
-    /// Tells maximum capacity returning MAX.
-    #[inline]
-    pub const fn capacity(&self) -> usize {
-        MAX
-    }
-
-    /// Tells if maximum capacity met.
-    #[inline]
-    pub const fn is_full(&self) -> bool {
-        self.len == MAX
     }
 }
 

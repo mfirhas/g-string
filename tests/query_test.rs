@@ -9,6 +9,7 @@ const CASES: &[&str] = &[
     "🦀rust🦀",
     " line1 \n line2 ",
     "\t hello \n",
+    "🥷🔥🌏 🌎 🌍 👨‍👩‍👧‍👦",
 ];
 
 #[test]
@@ -50,6 +51,18 @@ fn chars_char_indices_bytes() {
             s.bytes().collect::<Vec<_>>(),
             input.bytes().collect::<Vec<_>>()
         );
+    }
+}
+
+#[test]
+fn graphemes() {
+    for input in CASES {
+        let s = GString::try_default(input).unwrap();
+
+        for g in s.graphemes() {
+            let iter_s = GString::try_default(g).unwrap();
+            assert_eq!(iter_s.grapheme_count(), 1);
+        }
     }
 }
 

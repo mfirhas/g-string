@@ -19,6 +19,10 @@ mod macros_test;
 #[path = "iterator_test.rs"]
 mod iterator_test;
 
+#[cfg(feature = "alloc")]
+#[path = "query_test.rs"]
+mod query_test;
+
 #[path = "mutation_test.rs"]
 mod mutation_test;
 

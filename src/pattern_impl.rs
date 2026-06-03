@@ -72,27 +72,27 @@ impl Pattern for char {
     }
 
     #[inline]
-    fn contains<'a>(&self, s: &'a str) -> bool {
+    fn contains(&self, s: &str) -> bool {
         s.contains(*self)
     }
 
     #[inline]
-    fn starts_with<'a>(&self, s: &'a str) -> bool {
+    fn starts_with(&self, s: &str) -> bool {
         s.starts_with(*self)
     }
 
     #[inline]
-    fn ends_with<'a>(&self, s: &'a str) -> bool {
+    fn ends_with(&self, s: &str) -> bool {
         s.ends_with(*self)
     }
 
     #[inline]
-    fn find<'a>(&self, s: &'a str) -> Option<usize> {
+    fn find(&self, s: &str) -> Option<usize> {
         s.find(*self)
     }
 
     #[inline]
-    fn rfind<'a>(&self, s: &'a str) -> Option<usize> {
+    fn rfind(&self, s: &str) -> Option<usize> {
         s.rfind(*self)
     }
 }
@@ -180,27 +180,27 @@ impl<'p> Pattern for &'p str {
     }
 
     #[inline]
-    fn contains<'a>(&self, s: &'a str) -> bool {
+    fn contains(&self, s: &str) -> bool {
         s.contains(*self)
     }
 
     #[inline]
-    fn starts_with<'a>(&self, s: &'a str) -> bool {
+    fn starts_with(&self, s: &str) -> bool {
         s.starts_with(*self)
     }
 
     #[inline]
-    fn ends_with<'a>(&self, s: &'a str) -> bool {
+    fn ends_with(&self, s: &str) -> bool {
         s.ends_with(*self)
     }
 
     #[inline]
-    fn find<'a>(&self, s: &'a str) -> Option<usize> {
+    fn find(&self, s: &str) -> Option<usize> {
         s.find(*self)
     }
 
     #[inline]
-    fn rfind<'a>(&self, s: &'a str) -> Option<usize> {
+    fn rfind(&self, s: &str) -> Option<usize> {
         s.rfind(*self)
     }
 }

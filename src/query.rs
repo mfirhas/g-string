@@ -157,15 +157,15 @@ pub trait Pattern {
     // searching
     //
 
-    fn contains<'a>(&self, s: &'a str) -> bool;
+    fn contains(&self, s: &str) -> bool;
 
-    fn starts_with<'a>(&self, s: &'a str) -> bool;
+    fn starts_with(&self, s: &str) -> bool;
 
-    fn ends_with<'a>(&self, s: &'a str) -> bool;
+    fn ends_with(&self, s: &str) -> bool;
 
-    fn find<'a>(&self, s: &'a str) -> Option<usize>;
+    fn find(&self, s: &str) -> Option<usize>;
 
-    fn rfind<'a>(&self, s: &'a str) -> Option<usize>;
+    fn rfind(&self, s: &str) -> Option<usize>;
 }
 
 // search

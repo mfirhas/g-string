@@ -16,7 +16,7 @@
   * maximum length
   * ASCII-only enforcement
   * custom validation logic
-* Full `str` interoperability through `Deref<Target = str>`.
+* Query APIs.
 * Mutation APIs that preserve all invariants.
 * Conversions to and from standard string-related types.
 * `serde` support for serialization and deserialization.
@@ -44,7 +44,7 @@ The crate centers around two primary types:
 
 All construction and mutation APIs preserve these invariants automatically.
 
-`g-string` maintains full interoperability with Rust’s string ecosystem through `Deref<Target = str>`, conversion traits, iterator support, formatting traits, and optional `serde` integration.
+`g-string` maintains full interoperability with some of Rust’s string query APIs, conversion traits, iterator support, formatting traits, and optional `serde` integration.
 
 Core goals of the `GString` include:
 

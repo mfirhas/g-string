@@ -138,14 +138,14 @@ fn gstring_full_form_custom_validator() {
 
 #[test]
 fn gstring_is_const() {
-    const G: g_string::NotValidatedGString<NoValidation, 0, 32, false> =
+    const G: g_string::InValidatedGString<NoValidation, 0, 32, false> =
         gstring!("const", NoValidation, 0, 32, false);
     assert_eq!(G.validate().unwrap().as_str(), "const");
 }
 
 #[test]
 fn gstring_default_form_is_const() {
-    type Temp = g_string::NotValidatedGString<NoValidation, 0, 255, false>;
+    type Temp = g_string::InValidatedGString<NoValidation, 0, 255, false>;
     // The simple form also expands to a const block
     const G: Temp = gstring!("hello");
     assert_eq!(G.validate().unwrap().as_str(), "hello");
@@ -225,21 +225,21 @@ fn gstring_compile_ok_validator_not_invoked_in_const() {
 #[should_panic(expected = "maximum length exceeds MAX")]
 fn gstring_new_panics_too_long() {
     // MAX = 4, input has 5 bytes
-    GString::<NoValidation, 0, 4, false>::__new("hello");
+    GString::<NoValidation, 0, 4, false>::new("hello");
 }
 
 #[test]
 #[should_panic(expected = "minimum length below MIN")]
 fn gstring_new_panics_too_short() {
     // MIN = 3, input has 2 bytes
-    GString::<NoValidation, 3, 32, false>::__new("hi");
+    GString::<NoValidation, 3, 32, false>::new("hi");
 }
 
 #[test]
 #[should_panic(expected = "only ASCII characters are allowed")]
 fn gstring_new_panics_non_ascii() {
     // ASCII_ONLY = true, input contains non-ASCII
-    GString::<NoValidation, 0, 32, true>::__new("café");
+    GString::<NoValidation, 0, 32, true>::new("café");
 }
 
 // -------------------------------------------------------------------------

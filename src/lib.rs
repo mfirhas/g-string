@@ -22,8 +22,6 @@ pub use gsecret::GSecret;
 #[cfg(feature = "grapheme")]
 pub use unicode_segmentation::{Graphemes, UnicodeSegmentation};
 
-pub use macros::NotValidatedGString;
-
 #[cfg(feature = "serde")]
 mod serde;
 
@@ -251,6 +249,58 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     pub fn validate(self) -> Result<Self, GStringError<V::Err>> {
         V::validate(&self).map_err(GStringError::Validation)?;
         Ok(self)
+    }
+}
+
+/// GString from const generic constructor.
+///
+/// It must be validated before getting actual `GString`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct InValidatedGString<
+    V: Validator,
+    const MIN: usize,
+    const MAX: usize,
+    const ASCII_ONLY: bool,
+>(GString<V, MIN, MAX, ASCII_ONLY>);
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    InValidatedGString<V, MIN, MAX, ASCII_ONLY>
+{
+    /// Validate into GString.
+    #[inline(always)]
+    pub fn validate(self) -> Result<GString<V, MIN, MAX, ASCII_ONLY>, GStringError<V::Err>> {
+        self.0.validate()
+    }
+}
+
+macro_rules! errpanic {
+    ($expr:expr) => {
+        match $expr {
+            Ok(v) => v,
+            Err(Err::TooShort(_)) => {
+                panic!("minimum length below MIN")
+            }
+            Err(Err::TooLong(_)) => {
+                panic!("maximum length exceeds MAX")
+            }
+            Err(Err::NotAscii) => {
+                panic!("only ASCII characters are allowed")
+            }
+        }
+    };
+}
+
+impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
+    GString<V, MIN, MAX, ASCII_ONLY>
+{
+    /// Construct GString in const context returning invalidated string.
+    /// Validate the return to get GString.
+    #[allow(clippy::new_ret_no_self)]
+    pub const fn new(s: &str) -> InValidatedGString<V, MIN, MAX, ASCII_ONLY> {
+        let ret = errpanic!(Self::stack_allocate(s));
+        errpanic!(ret.check_bounds());
+        errpanic!(ret.check_ascii());
+        InValidatedGString(ret)
     }
 }
 

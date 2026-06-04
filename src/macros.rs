@@ -1,60 +1,6 @@
-use crate::{Err, GString, GStringError, Validator};
-
-/// GString from const generic constructor.
-///
-/// Const generic `gstring!` is compile-time check and return this temporary type before you validate it.
-///
-/// It must be validated before getting actual `GString`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct NotValidatedGString<
-    V: Validator,
-    const MIN: usize,
-    const MAX: usize,
-    const ASCII_ONLY: bool,
->(GString<V, MIN, MAX, ASCII_ONLY>);
-
-impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
-    NotValidatedGString<V, MIN, MAX, ASCII_ONLY>
-{
-    #[inline(always)]
-    pub fn validate(self) -> Result<GString<V, MIN, MAX, ASCII_ONLY>, GStringError<V::Err>> {
-        V::validate(&self.0).map_err(GStringError::Validation)?;
-        Ok(self.0)
-    }
-}
-
-macro_rules! errpanic {
-    ($expr:expr) => {
-        match $expr {
-            Ok(v) => v,
-            Err(Err::TooShort(_)) => {
-                panic!("minimum length below MIN")
-            }
-            Err(Err::TooLong(_)) => {
-                panic!("maximum length exceeds MAX")
-            }
-            Err(Err::NotAscii) => {
-                panic!("only ASCII characters are allowed")
-            }
-        }
-    };
-}
-
-impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
-    GString<V, MIN, MAX, ASCII_ONLY>
-{
-    #[doc(hidden)]
-    pub const fn __new(s: &str) -> NotValidatedGString<V, MIN, MAX, ASCII_ONLY> {
-        let ret = errpanic!(Self::stack_allocate(s));
-        errpanic!(ret.check_bounds());
-        errpanic!(ret.check_ascii());
-        NotValidatedGString(ret)
-    }
-}
-
 /// Compile-time check for GString without validation.
 ///
-/// Validation can only happen at runtime, so this macro returned [`NotValidatedGString`] needed to be validated.
+/// Validation can only happen at runtime, so this macro returned [`crate::InValidatedGString`] needed to be validated.
 ///
 /// It's only useful for checking bounds and ASCII statically at compile-time.
 ///
@@ -98,8 +44,8 @@ macro_rules! gstring {
         gstring!($s, $validator, $min, $max, { $crate::DEFAULT_ASCII_ONLY })
     };
     ($s:literal, $validator:ty, $min:expr, $max:expr, $ascii_only:expr) => {{
-        const RET: $crate::NotValidatedGString<$validator, $min, $max, $ascii_only> =
-            $crate::GString::<$validator, $min, $max, $ascii_only>::__new($s);
+        const RET: $crate::InValidatedGString<$validator, $min, $max, $ascii_only> =
+            $crate::GString::<$validator, $min, $max, $ascii_only>::new($s);
         RET
     }};
 }

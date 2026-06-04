@@ -37,7 +37,7 @@ std = ["alloc", "serde?/std"]
 alloc = ["serde?/alloc"]
 serde = ["dep:serde"]
 secret = ["dep:zeroize"]
-grapheme = ["unicode-segmentation"]
+grapheme = ["dep:unicode-segmentation"]
 
 [dependencies]
 serde = { version = "1", default-features = false, optional = true }

@@ -1,6 +1,6 @@
 [package]
 name = "g-string"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 authors = ["Muhammad Fathir Irhas <fathir.irhas@gmail.com>"]
 description = "Stack-allocated string type with generic configurations."

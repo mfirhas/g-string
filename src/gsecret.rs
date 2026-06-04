@@ -67,7 +67,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
     /// Manually zeroize the secret.
     ///
-    /// It's useful if you want to zeroize before the secret is out-of-scope/dopped.
+    /// It's useful if you want to zeroize before the secret is out-of-scope/dropped.
     #[inline]
     pub fn zeroize(&mut self) {
         self.inner.zeroize();
@@ -87,6 +87,7 @@ impl<V, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> zeroize::Zer
 where
     V: Validator,
 {
+    #[inline]
     fn zeroize(&mut self) {
         self.inner.zeroize();
     }

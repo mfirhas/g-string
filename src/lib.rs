@@ -255,7 +255,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 /// GString from const generic constructor.
 ///
 /// It must be validated before getting actual `GString`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug)]
 pub struct InValidatedGString<
     V: Validator,
     const MIN: usize,

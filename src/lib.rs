@@ -71,6 +71,7 @@ pub struct NoValidation;
 impl Validator for NoValidation {
     type Err = Infallible;
 
+    #[inline]
     fn validate(_: impl AsRef<str>) -> Result<(), Self::Err> {
         Ok(())
     }
@@ -79,6 +80,7 @@ impl Validator for NoValidation {
 impl Validator for () {
     type Err = Infallible;
 
+    #[inline]
     fn validate(_: impl AsRef<str>) -> Result<(), Self::Err> {
         Ok(())
     }

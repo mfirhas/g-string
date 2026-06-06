@@ -31,7 +31,6 @@ use error::Err;
 
 use core::{
     convert::Infallible,
-    error::Error,
     fmt::{Debug, Display},
     marker::PhantomData,
 };
@@ -53,7 +52,7 @@ pub type GStringNV<const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> =
 ///
 /// Usually it's implemented by marker type.
 pub trait Validator: Clone {
-    type Err: Error + Send + Sync + 'static;
+    type Err;
 
     /// Validate the string.
     fn validate(s: impl AsRef<str>) -> Result<(), Self::Err>;

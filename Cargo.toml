@@ -9,6 +9,7 @@ repository = "https://github.com/mfirhas/g-string"
 documentation = "https://docs.rs/g-string"
 keywords = ["string", "generic", "secret", "type-safe", "no-std"]
 categories = ["text-processing", "data-structures"]
+rust-version = "1.86.0"
 exclude = [
   "**/*_test.rs",
   "tests/**",

@@ -52,10 +52,10 @@ pub type GStringNV<const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> =
 ///
 /// Usually it's implemented by marker type.
 pub trait Validator: Clone {
-    type Err;
+    type Error;
 
     /// Validate the string.
-    fn validate(s: impl AsRef<str>) -> Result<(), Self::Err>;
+    fn validate(s: impl AsRef<str>) -> Result<(), Self::Error>;
 }
 
 /// Mark validation allowing empty string.
@@ -68,19 +68,19 @@ pub trait AllowEmpty {}
 pub struct NoValidation;
 
 impl Validator for NoValidation {
-    type Err = Infallible;
+    type Error = Infallible;
 
     #[inline]
-    fn validate(_: impl AsRef<str>) -> Result<(), Self::Err> {
+    fn validate(_: impl AsRef<str>) -> Result<(), Self::Error> {
         Ok(())
     }
 }
 
 impl Validator for () {
-    type Err = Infallible;
+    type Error = Infallible;
 
     #[inline]
-    fn validate(_: impl AsRef<str>) -> Result<(), Self::Err> {
+    fn validate(_: impl AsRef<str>) -> Result<(), Self::Error> {
         Ok(())
     }
 }
@@ -118,9 +118,9 @@ impl AllowEmpty for () {}
 /// struct UsernameValidation;
 ///
 /// impl Validator for UsernameValidation {
-///     type Err = GStringError<&'static str>;
+///     type Error = GStringError<&'static str>;
 ///
-///     fn validate(_: impl AsRef<str>) -> Result<(), Self::Err> {
+///     fn validate(_: impl AsRef<str>) -> Result<(), Self::Error> {
 ///         // some validation logics here...
 ///         Ok(())
 ///     }   
@@ -177,7 +177,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     /// assert_eq!(a, "anjay!!");
     /// ```
     #[inline]
-    pub fn try_new<S>(s: S) -> Result<Self, GStringError<V::Err>>
+    pub fn try_new<S>(s: S) -> Result<Self, GStringError<V::Error>>
     where
         S: AsRef<str>,
     {
@@ -247,9 +247,59 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
     // Execute validation logic.
     #[inline(always)]
-    pub fn validate(self) -> Result<Self, GStringError<V::Err>> {
+    pub fn validate(self) -> Result<Self, GStringError<V::Error>> {
         V::validate(&self).map_err(GStringError::Validation)?;
         Ok(self)
+    }
+
+    /// Calls a closure with a reference to the contained string.
+    ///
+    /// Returns `self` unchanged.
+    ///
+    /// This behaves similarly to `Option::inspect` and
+    /// `Result::inspect`.
+    #[inline]
+    pub fn inspect<F>(self, func: F) -> Self
+    where
+        F: FnOnce(&str),
+    {
+        func(self.as_str());
+        self
+    }
+
+    /// Transforms this string into another validated string.
+    ///
+    /// The transformed value is validated using the destination
+    /// validator and bounds before being returned.
+    ///
+    /// This behaves similarly to `Option::map` and `Result::map`.
+    #[inline]
+    pub fn map<UV, const UMIN: usize, const UMAX: usize, const UASCII_ONLY: bool, F, U>(
+        self,
+        func: F,
+    ) -> Result<GString<UV, UMIN, UMAX, UASCII_ONLY>, GStringError<UV::Error>>
+    where
+        UV: Validator,
+        F: FnOnce(&str) -> U,
+        U: AsRef<str>,
+    {
+        GString::<UV, UMIN, UMAX, UASCII_ONLY>::try_new(func(self.as_str()).as_ref())
+    }
+
+    /// Chains another fallible validated transformation.
+    ///
+    /// This behaves similarly to `Option::and_then` and
+    /// `Result::and_then`.
+    #[inline]
+    pub fn and_then<UV, const UMIN: usize, const UMAX: usize, const UASCII_ONLY: bool, F>(
+        self,
+        func: F,
+    ) -> Result<GString<UV, UMIN, UMAX, UASCII_ONLY>, GStringError<UV::Error>>
+    where
+        UV: Validator,
+        F: FnOnce(&str) -> Result<GString<UV, UMIN, UMAX, UASCII_ONLY>, GStringError<UV::Error>>,
+    {
+        func(self.as_str())
     }
 }
 
@@ -269,7 +319,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 {
     /// Validate into GString.
     #[inline(always)]
-    pub fn validate(self) -> Result<GString<V, MIN, MAX, ASCII_ONLY>, GStringError<V::Err>> {
+    pub fn validate(self) -> Result<GString<V, MIN, MAX, ASCII_ONLY>, GStringError<V::Error>> {
         self.0.validate()
     }
 }

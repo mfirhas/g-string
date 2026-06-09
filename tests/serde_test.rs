@@ -25,9 +25,9 @@ impl core::fmt::Display for LowercaseError {
 impl core::error::Error for LowercaseError {}
 
 impl Validator for LowercaseOnly {
-    type Err = LowercaseError;
+    type Error = LowercaseError;
 
-    fn validate(s: impl AsRef<str>) -> Result<(), Self::Err> {
+    fn validate(s: impl AsRef<str>) -> Result<(), Self::Error> {
         if s.as_ref().chars().all(|c| c.is_ascii_lowercase()) {
             Ok(())
         } else {

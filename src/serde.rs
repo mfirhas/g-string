@@ -28,7 +28,7 @@ impl<'de, V, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> Visitor
     for GStringVisitor<V, MIN, MAX, ASCII_ONLY>
 where
     V: Validator,
-    GStringError<V::Err>: fmt::Display,
+    GStringError<V::Error>: fmt::Display,
 {
     type Value = GString<V, MIN, MAX, ASCII_ONLY>;
 
@@ -59,7 +59,7 @@ impl<'de, V, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> Deseria
     for GString<V, MIN, MAX, ASCII_ONLY>
 where
     V: Validator,
-    GStringError<V::Err>: fmt::Display,
+    GStringError<V::Error>: fmt::Display,
 {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         deserializer.deserialize_str(GStringVisitor(PhantomData))
@@ -90,7 +90,7 @@ mod secret_serde {
         for GSecretVisitor<V, MIN, MAX, ASCII_ONLY>
     where
         V: Validator,
-        GStringError<V::Err>: fmt::Display,
+        GStringError<V::Error>: fmt::Display,
     {
         type Value = GSecret<V, MIN, MAX, ASCII_ONLY>;
 
@@ -124,7 +124,7 @@ mod secret_serde {
         for GSecret<V, MIN, MAX, ASCII_ONLY>
     where
         V: Validator,
-        GStringError<V::Err>: fmt::Display,
+        GStringError<V::Error>: fmt::Display,
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where

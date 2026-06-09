@@ -96,9 +96,9 @@ impl fmt::Display for UsernameError {
 impl std::error::Error for UsernameError {}
 
 impl Validator for UsernameValidator {
-    type Err = UsernameError;
+    type Error = UsernameError;
 
-    fn validate(s: impl AsRef<str>) -> Result<(), Self::Err> {
+    fn validate(s: impl AsRef<str>) -> Result<(), Self::Error> {
         if s.as_ref().chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
             Ok(())
         } else {
@@ -111,9 +111,9 @@ impl Validator for UsernameValidator {
 struct AlphaOnly;
 
 impl Validator for AlphaOnly {
-    type Err = UsernameError;
+    type Error = UsernameError;
 
-    fn validate(s: impl AsRef<str>) -> Result<(), Self::Err> {
+    fn validate(s: impl AsRef<str>) -> Result<(), Self::Error> {
         if s.as_ref().chars().all(|c| c.is_ascii_alphabetic() || c == '_') {
             Ok(())
         } else {

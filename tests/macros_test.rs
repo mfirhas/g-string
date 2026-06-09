@@ -23,9 +23,9 @@ impl core::error::Error for NoDigitsError {}
 struct NoDigits;
 
 impl Validator for NoDigits {
-    type Err = NoDigitsError;
+    type Error = NoDigitsError;
 
-    fn validate(s: impl AsRef<str>) -> Result<(), Self::Err> {
+    fn validate(s: impl AsRef<str>) -> Result<(), Self::Error> {
         if s.as_ref().chars().any(|c| c.is_ascii_digit()) {
             Err(NoDigitsError)
         } else {

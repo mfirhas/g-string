@@ -1,6 +1,9 @@
 mod constructors;
 mod display;
 
+#[path = "functor_test.rs"]
+mod functor_test;
+
 #[path = "equality_test.rs"]
 mod equality_test;
 

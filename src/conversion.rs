@@ -12,7 +12,7 @@ use crate::{GString, Validator, error::GStringError};
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> FromStr
     for GString<V, MIN, MAX, ASCII_ONLY>
 {
-    type Err = GStringError<V::Err>;
+    type Err = GStringError<V::Error>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Self::try_new(s)
@@ -33,7 +33,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> A
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> TryFrom<String>
     for GString<V, MIN, MAX, ASCII_ONLY>
 {
-    type Error = GStringError<V::Err>;
+    type Error = GStringError<V::Error>;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         Self::try_new(&value)
@@ -54,7 +54,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> TryFrom<&str>
     for GString<V, MIN, MAX, ASCII_ONLY>
 {
-    type Error = GStringError<V::Err>;
+    type Error = GStringError<V::Error>;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         Self::from_str(value)
@@ -74,7 +74,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> A
 impl<'a, V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     TryFrom<alloc::borrow::Cow<'a, str>> for GString<V, MIN, MAX, ASCII_ONLY>
 {
-    type Error = GStringError<V::Err>;
+    type Error = GStringError<V::Error>;
 
     fn try_from(value: alloc::borrow::Cow<'a, str>) -> Result<Self, Self::Error> {
         Self::from_str(&value)
@@ -93,7 +93,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     /// let result: GString = GString::try_from_iter(["12", "3a"]).unwrap();
     /// assert_eq!(result, "123a");
     /// ```
-    pub fn try_from_iter<I, S>(iter: I) -> Result<Self, GStringError<V::Err>>
+    pub fn try_from_iter<I, S>(iter: I) -> Result<Self, GStringError<V::Error>>
     where
         I: IntoIterator<Item = S>,
         S: AsRef<str>,
@@ -132,7 +132,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
     /// let result: GString = GString::try_from_chars(['a', 'b', 'c']).unwrap();
     /// assert_eq!(result, "abc");
     /// ```
-    pub fn try_from_chars<I>(iter: I) -> Result<Self, GStringError<V::Err>>
+    pub fn try_from_chars<I>(iter: I) -> Result<Self, GStringError<V::Error>>
     where
         I: IntoIterator<Item = char>,
     {

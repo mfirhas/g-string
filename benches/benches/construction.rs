@@ -39,8 +39,8 @@ impl std::error::Error for MissingAt {}
 struct AtValidator; // accepts any string containing '@'
 
 impl g_string::Validator for AtValidator {
-    type Err = MissingAt;
-    fn validate(s: impl AsRef<str>) -> Result<(), Self::Err> {
+    type Error = MissingAt;
+    fn validate(s: impl AsRef<str>) -> Result<(), Self::Error> {
         if s.as_ref().contains('@') {
             Ok(())
         } else {

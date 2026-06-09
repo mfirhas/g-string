@@ -271,19 +271,19 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 {
     /// Returns a trimmed copy of this string.
     #[inline]
-    pub fn try_trim(&self) -> Result<Self, GStringError<V::Err>> {
+    pub fn try_trim(&self) -> Result<Self, GStringError<V::Error>> {
         Self::try_new(self.as_str().trim())
     }
 
     /// Returns a copy of this string with leading whitespace removed.
     #[inline]
-    pub fn try_trim_start(&self) -> Result<Self, GStringError<V::Err>> {
+    pub fn try_trim_start(&self) -> Result<Self, GStringError<V::Error>> {
         Self::try_new(self.as_str().trim_start())
     }
 
     /// Returns a copy of this string with trailing whitespace removed.
     #[inline]
-    pub fn try_trim_end(&self) -> Result<Self, GStringError<V::Err>> {
+    pub fn try_trim_end(&self) -> Result<Self, GStringError<V::Error>> {
         Self::try_new(self.as_str().trim_end())
     }
 

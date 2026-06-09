@@ -43,7 +43,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 {
     /// Construct GSecret with defined generic params.
     #[inline]
-    pub fn try_new<S>(secret: S) -> Result<Self, GStringError<V::Err>>
+    pub fn try_new<S>(secret: S) -> Result<Self, GStringError<V::Error>>
     where
         S: AsRef<str>,
     {
@@ -111,7 +111,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> D
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> FromStr
     for GSecret<V, MIN, MAX, ASCII_ONLY>
 {
-    type Err = GStringError<V::Err>;
+    type Err = GStringError<V::Error>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let secret = GSecret::try_new(s)?;
@@ -123,7 +123,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> F
 impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> TryFrom<&str>
     for GSecret<V, MIN, MAX, ASCII_ONLY>
 {
-    type Error = GStringError<V::Err>;
+    type Error = GStringError<V::Error>;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let secret = GSecret::try_new(value)?;
@@ -144,7 +144,7 @@ impl<V, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool> TryFrom<Stri
 where
     V: Validator,
 {
-    type Error = GStringError<V::Err>;
+    type Error = GStringError<V::Error>;
 
     fn try_from(mut value: String) -> Result<Self, Self::Error> {
         use zeroize::Zeroize;
@@ -165,7 +165,7 @@ impl<
     const ASCII_ONLY: bool,
 > TryFrom<GString<GSTRINGV, MIN, MAX, ASCII_ONLY>> for GSecret<GSECRETV, MIN, MAX, ASCII_ONLY>
 {
-    type Error = GStringError<GSECRETV::Err>;
+    type Error = GStringError<GSECRETV::Error>;
 
     fn try_from(value: GString<GSTRINGV, MIN, MAX, ASCII_ONLY>) -> Result<Self, Self::Error> {
         Self::try_new(value.as_str())

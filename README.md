@@ -1,6 +1,6 @@
 # `g-string`
 
-[![MSRV](https://img.shields.io/crates/msrv/g-string)](https://crates.io/crates/g-string)
+[![MSRV](https://img.shields.io/crates/msrv/g-string)](https://github.com/mfirhas/g-string/actions/workflows/msrv.yml)
 [![Crates.io](https://img.shields.io/crates/v/g-string.svg)](https://crates.io/crates/g-string)
 [![ci](https://github.com/mfirhas/g-string/actions/workflows/ci.yml/badge.svg)](https://github.com/mfirhas/g-string/actions/workflows/ci.yml)
 [![Documentation](https://docs.rs/g-string/badge.svg)](https://docs.rs/g-string)

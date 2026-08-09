@@ -19,6 +19,12 @@ use core::fmt;
 use criterion::{BenchmarkId, Criterion, Throughput, black_box};
 use g_string::{GString, GStringNV, NoValidation, gstring};
 
+pub fn bench_all(c: &mut Criterion) {
+    bench_try_new(c);
+    bench_gstring_macro(c);
+    bench_macro_vs_runtime(c);
+}
+
 // ---------------------------------------------------------------------------
 // Validator fixture — cheap (one contains-check) so we can see its marginal
 // cost above the no-validation baseline.

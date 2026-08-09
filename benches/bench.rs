@@ -1,22 +1,20 @@
+use criterion::{Criterion, criterion_group, criterion_main};
+
 mod benches {
+    pub fn noop_bench(_: &mut criterion::Criterion) {}
     pub mod construction;
 }
 
-use criterion::{Criterion, criterion_group, criterion_main};
-
 fn criterion() -> Criterion {
-    let output_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(".bench");
-
-    Criterion::default().output_directory(&output_dir)
+    Criterion::default()
 }
 
 criterion_group! {
-    name = construction;
+    name = g_string;
     config = criterion();
     targets =
-        benches::construction::bench_try_new,
-        benches::construction::bench_gstring_macro,
-        benches::construction::bench_macro_vs_runtime,
+        benches::noop_bench,
+        benches::construction::bench_all,
 }
 
-criterion_main!(construction,);
+criterion_main!(g_string,);

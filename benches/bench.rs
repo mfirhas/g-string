@@ -5,6 +5,8 @@ mod benches {
     pub mod construction_bench;
     pub mod mutation_bench;
     pub mod query_bench;
+
+    pub mod uninit_bench;
 }
 
 fn criterion() -> Criterion {
@@ -16,9 +18,10 @@ criterion_group! {
     config = criterion();
     targets =
         benches::noop_bench,
-        benches::construction_bench::bench_all,
-        benches::mutation_bench::bench_all,
-        benches::query_bench::bench_all,
+        // benches::construction_bench::bench_all,
+        // benches::mutation_bench::bench_all,
+        // benches::query_bench::bench_all,
+        benches::uninit_bench::bench_all,
 }
 
 criterion_main!(g_string,);

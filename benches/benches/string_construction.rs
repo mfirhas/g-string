@@ -49,6 +49,11 @@ const UNI: &str = "héllo wörld 🌍";
 // ---------------------------------------------------------------------------
 
 pub fn bench_all(c: &mut Criterion) {
+    bench_construction(c);
+    bench_push_str(c);
+}
+
+pub fn bench_construction(c: &mut Criterion) {
     let mut g = c.benchmark_group("construction/string_vs_gstring");
 
     for (label, input) in [("5b", S5), ("43b", S43), ("48b", S64), ("unicode", UNI)] {
@@ -74,6 +79,54 @@ pub fn bench_all(c: &mut Criterion) {
 
         g.bench_with_input(BenchmarkId::new("string", label), &input, |b, s| {
             b.iter(|| black_box(String::from(*s)))
+        });
+    }
+
+    g.finish();
+}
+
+pub fn bench_push_str(c: &mut Criterion) {
+    let mut g = c.benchmark_group("construction/string_vs_gstring__push_str");
+
+    for (label, input) in [("5b", S5), ("43b", S43), ("48b", S64), ("unicode", UNI)] {
+        g.bench_with_input(BenchmarkId::new("gstring_100", label), &input, |b, s| {
+            b.iter(|| {
+                let mut gs = black_box(S100::try_new(*s).unwrap());
+                gs.push_str("new string").unwrap();
+                black_box(gs)
+            })
+        });
+
+        g.bench_with_input(BenchmarkId::new("gstring_255", label), &input, |b, s| {
+            b.iter(|| {
+                let mut gs = black_box(S255::try_new(*s).unwrap());
+                gs.push_str("new string").unwrap();
+                black_box(gs)
+            })
+        });
+
+        g.bench_with_input(BenchmarkId::new("gstring_500", label), &input, |b, s| {
+            b.iter(|| {
+                let mut gs = black_box(S500::try_new(*s).unwrap());
+                gs.push_str("new string").unwrap();
+                black_box(gs)
+            })
+        });
+
+        g.bench_with_input(BenchmarkId::new("gstring_1000", label), &input, |b, s| {
+            b.iter(|| {
+                let mut gs = black_box(S1000::try_new(*s).unwrap());
+                gs.push_str("new string").unwrap();
+                black_box(gs)
+            })
+        });
+
+        g.bench_with_input(BenchmarkId::new("string", label), &input, |b, s| {
+            b.iter(|| {
+                let mut gs = black_box(String::from(*s));
+                gs.push_str("new string");
+                black_box(gs)
+            })
         });
     }
 

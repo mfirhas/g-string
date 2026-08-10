@@ -16,8 +16,8 @@ criterion_group! {
     config = criterion();
     targets =
         benches::noop_bench,
-        // benches::construction::bench_all,
-        // benches::mutation_bench::bench_all,
+        benches::construction::bench_all,
+        benches::mutation_bench::bench_all,
         benches::query_bench::bench_all,
 }
 

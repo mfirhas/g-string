@@ -23,7 +23,7 @@ pub fn bench_all(c: &mut Criterion) {
 }
 
 pub fn bench_try_new_vs_string(c: &mut Criterion) {
-    let mut g = c.benchmark_group("construction/string_vs_gstring");
+    let mut g = c.benchmark_group("uninit_bench");
 
     for (label, input) in [("5b", S5), ("43b", S43), ("48b", S64), ("unicode", UNI)] {
         g.bench_with_input(BenchmarkId::new("gstring_50", label), &input, |b, s| {

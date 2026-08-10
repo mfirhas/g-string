@@ -29,6 +29,9 @@ mod query_test;
 #[path = "mutation_test.rs"]
 mod mutation_test;
 
+#[path = "range_test.rs"]
+mod range_test;
+
 #[cfg(feature = "serde")]
 #[path = "serde_test.rs"]
 mod serde_test;

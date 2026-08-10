@@ -9,6 +9,7 @@ mod macros;
 mod mutation;
 mod order;
 mod query;
+mod range;
 pub use query::Pattern;
 
 mod pattern_impl;

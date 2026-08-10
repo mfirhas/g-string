@@ -15,7 +15,6 @@ use g_string::GStringNV;
 // Type aliases
 // ---------------------------------------------------------------------------
 
-type S50 = GStringNV<0, 50, false>;
 type S100 = GStringNV<0, 100, false>;
 type S255 = GStringNV<0, 255, false>;
 type S500 = GStringNV<0, 500, false>;
@@ -49,40 +48,7 @@ const UNI: &str = "héllo wörld 🌍";
 // ---------------------------------------------------------------------------
 
 pub fn bench_all(c: &mut Criterion) {
-    bench_construction(c);
     bench_push_str(c);
-}
-
-pub fn bench_construction(c: &mut Criterion) {
-    let mut g = c.benchmark_group("construction/string_vs_gstring");
-
-    for (label, input) in [("5b", S5), ("43b", S43), ("48b", S64), ("unicode", UNI)] {
-        g.bench_with_input(BenchmarkId::new("gstring_50", label), &input, |b, s| {
-            b.iter(|| black_box(S50::try_new(*s).unwrap()))
-        });
-
-        g.bench_with_input(BenchmarkId::new("gstring_100", label), &input, |b, s| {
-            b.iter(|| black_box(S100::try_new(*s).unwrap()))
-        });
-
-        g.bench_with_input(BenchmarkId::new("gstring_255", label), &input, |b, s| {
-            b.iter(|| black_box(S255::try_new(*s).unwrap()))
-        });
-
-        g.bench_with_input(BenchmarkId::new("gstring_500", label), &input, |b, s| {
-            b.iter(|| black_box(S500::try_new(*s).unwrap()))
-        });
-
-        g.bench_with_input(BenchmarkId::new("gstring_1000", label), &input, |b, s| {
-            b.iter(|| black_box(S1000::try_new(*s).unwrap()))
-        });
-
-        g.bench_with_input(BenchmarkId::new("string", label), &input, |b, s| {
-            b.iter(|| black_box(String::from(*s)))
-        });
-    }
-
-    g.finish();
 }
 
 pub fn bench_push_str(c: &mut Criterion) {

@@ -52,7 +52,7 @@ impl<V: Validator, const MIN: usize, const MAX: usize, const ASCII_ONLY: bool>
 
         // `bytes.len() <= MAX` was checked above.
         buf.try_extend_from_slice(bytes)
-            .expect("length was checked against MAX");
+            .map_err(|_| Err::TooLong(MAX))?;
 
         Ok(Self {
             buf,

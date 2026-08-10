@@ -12,83 +12,101 @@ fn gstring_ascii(s: &str) -> SAscii {
 }
 
 // ---------------------------------------------------------------------------
-// Range<usize>
+// Range
 // ---------------------------------------------------------------------------
 
 #[test]
-fn index_range() {
-    let s = gstring("hello world");
+fn index_range_oracle() {
+    let cases = [
+        ("hello", 0..0),
+        ("hello", 0..1),
+        ("hello", 0..5),
+        ("hello", 1..4),
+        ("hello", 4..5),
+        ("hello", 5..5),
+        ("hello world", 0..5),
+        ("hello world", 6..11),
+        ("hello world", 1..4),
+        ("", 0..0),
+        ("a", 0..1),
+        ("a", 0..0),
+        ("a", 1..1),
+        ("héllo 🌍", 0..1),
+        ("héllo 🌍", 1..3),
+        ("héllo 🌍", 3..6),
+        ("héllo 🌍", 7..11),
+        ("héllo 🌍", 0..11),
+    ];
 
-    assert_eq!(&s[0..5], "hello");
-    assert_eq!(&s[6..11], "world");
-    assert_eq!(&s[1..4], "ell");
-}
+    for (input, range) in cases {
+        let g = gstring(input);
+        let oracle = input.to_string();
 
-#[test]
-fn index_range_at_start() {
-    let s = gstring("hello");
-
-    assert_eq!(&s[0..0], "");
-    assert_eq!(&s[0..1], "h");
-    assert_eq!(&s[0..5], "hello");
-}
-
-#[test]
-fn index_range_at_end() {
-    let s = gstring("hello");
-
-    assert_eq!(&s[5..5], "");
-    assert_eq!(&s[4..5], "o");
-    assert_eq!(&s[1..5], "ello");
-}
-
-#[test]
-fn index_range_full() {
-    let s = gstring("hello");
-
-    assert_eq!(&s[0..5], "hello");
+        assert_eq!(&g[range.clone()], &oracle[range]);
+    }
 }
 
 // ---------------------------------------------------------------------------
-// RangeFrom<usize>
+// RangeFrom
 // ---------------------------------------------------------------------------
 
 #[test]
-fn index_range_from() {
-    let s = gstring("hello world");
+fn index_range_from_oracle() {
+    let cases = [
+        ("hello", 0),
+        ("hello", 1),
+        ("hello", 4),
+        ("hello", 5),
+        ("hello world", 0),
+        ("hello world", 6),
+        ("hello world", 11),
+        ("", 0),
+        ("a", 0),
+        ("a", 1),
+        ("héllo 🌍", 0),
+        ("héllo 🌍", 1),
+        ("héllo 🌍", 3),
+        ("héllo 🌍", 7),
+        ("héllo 🌍", 11),
+    ];
 
-    assert_eq!(&s[0..], "hello world");
-    assert_eq!(&s[1..], "ello world");
-    assert_eq!(&s[6..], "world");
-    assert_eq!(&s[11..], "");
-}
+    for (input, start) in cases {
+        let g = gstring(input);
+        let oracle = input.to_string();
 
-#[test]
-fn index_range_from_start() {
-    let s = gstring("hello");
-
-    assert_eq!(&s[0..], "hello");
-}
-
-#[test]
-fn index_range_from_end() {
-    let s = gstring("hello");
-
-    assert_eq!(&s[5..], "");
+        assert_eq!(&g[start..], &oracle[start..]);
+    }
 }
 
 // ---------------------------------------------------------------------------
-// RangeTo<usize>
+// RangeTo
 // ---------------------------------------------------------------------------
 
 #[test]
-fn index_range_to() {
-    let s = gstring("hello world");
+fn index_range_to_oracle() {
+    let cases = [
+        ("hello", 0),
+        ("hello", 1),
+        ("hello", 5),
+        ("hello world", 0),
+        ("hello world", 5),
+        ("hello world", 11),
+        ("", 0),
+        ("a", 0),
+        ("a", 1),
+        ("héllo 🌍", 0),
+        ("héllo 🌍", 1),
+        ("héllo 🌍", 3),
+        ("héllo 🌍", 6),
+        ("héllo 🌍", 11),
+    ];
 
-    assert_eq!(&s[..0], "");
-    assert_eq!(&s[..1], "h");
-    assert_eq!(&s[..5], "hello");
-    assert_eq!(&s[..11], "hello world");
+    for (input, end) in cases {
+        let g = gstring(input);
+        let oracle = input.to_string();
+
+        assert_eq!(&g[..end], &oracle[..end]);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -96,221 +114,184 @@ fn index_range_to() {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn index_range_full_operator() {
-    let s = gstring("hello world");
+fn index_range_full_oracle() {
+    let cases = [
+        "",
+        "a",
+        "hello",
+        "hello world",
+        "héllo",
+        "héllo 🌍",
+        "👨‍👩‍👧‍👦",
+        "e\u{301}",
+    ];
 
-    assert_eq!(&s[..], "hello world");
-}
+    for input in cases {
+        let g = gstring(input);
+        let oracle = input.to_string();
 
-#[test]
-fn index_range_full_empty() {
-    let s = gstring("");
-
-    assert_eq!(&s[..], "");
-}
-
-// ---------------------------------------------------------------------------
-// RangeInclusive<usize>
-// ---------------------------------------------------------------------------
-
-#[test]
-fn index_range_inclusive() {
-    let s = gstring("hello world");
-
-    assert_eq!(&s[0..=4], "hello");
-    assert_eq!(&s[6..=10], "world");
-    assert_eq!(&s[1..=3], "ell");
-}
-
-#[test]
-fn index_range_inclusive_single_byte() {
-    let s = gstring("hello");
-
-    assert_eq!(&s[0..=0], "h");
-    assert_eq!(&s[4..=4], "o");
-}
-
-#[test]
-fn index_range_inclusive_full() {
-    let s = gstring("hello");
-
-    assert_eq!(&s[0..=4], "hello");
+        assert_eq!(&g[..], &oracle[..]);
+    }
 }
 
 // ---------------------------------------------------------------------------
-// RangeToInclusive<usize>
+// RangeInclusive
 // ---------------------------------------------------------------------------
 
 #[test]
-fn index_range_to_inclusive() {
-    let s = gstring("hello world");
+fn index_range_inclusive_oracle() {
+    let cases = [
+        ("hello", 0..=0),
+        ("hello", 0..=4),
+        ("hello", 1..=3),
+        ("hello", 4..=4),
+        ("hello world", 0..=4),
+        ("hello world", 6..=10),
+        ("héllo 🌍", 0..=0),
+        ("héllo 🌍", 1..=2),
+        ("héllo 🌍", 3..=5),
+        ("héllo 🌍", 7..=10),
+    ];
 
-    assert_eq!(&s[..=0], "h");
-    assert_eq!(&s[..=4], "hello");
-    assert_eq!(&s[..=10], "hello world");
+    for (input, range) in cases {
+        let g = gstring(input);
+        let oracle = input.to_string();
+
+        assert_eq!(&g[range.clone()], &oracle[range]);
+    }
 }
 
 // ---------------------------------------------------------------------------
-// Empty strings
+// RangeToInclusive
 // ---------------------------------------------------------------------------
 
 #[test]
-fn index_empty_string() {
-    let s = gstring("");
+fn index_range_to_inclusive_oracle() {
+    let cases = [
+        ("hello", 0),
+        ("hello", 4),
+        ("hello world", 0),
+        ("hello world", 4),
+        ("hello world", 10),
+        ("héllo 🌍", 0),
+        ("héllo 🌍", 2),
+        ("héllo 🌍", 5),
+        ("héllo 🌍", 10),
+    ];
 
-    assert_eq!(&s[..], "");
-    assert_eq!(&s[0..0], "");
-    assert_eq!(&s[0..], "");
-    assert_eq!(&s[..0], "");
+    for (input, end) in cases {
+        let g = gstring(input);
+        let oracle = input.to_string();
+
+        assert_eq!(&g[..=end], &oracle[..=end]);
+    }
 }
 
 // ---------------------------------------------------------------------------
-// Single-character strings
+// ASCII_ONLY
 // ---------------------------------------------------------------------------
 
 #[test]
-fn index_single_character() {
-    let s = gstring("a");
+fn index_ascii_only_oracle() {
+    let cases = [
+        ("", 0..0),
+        ("a", 0..1),
+        ("hello", 0..5),
+        ("hello world", 0..5),
+        ("hello world", 6..11),
+        ("abcdefghijklmnopqrstuvwxyz", 5..20),
+    ];
 
-    assert_eq!(&s[..], "a");
-    assert_eq!(&s[0..1], "a");
-    assert_eq!(&s[0..=0], "a");
+    for (input, range) in cases {
+        let g = gstring_ascii(input);
+        let oracle = input.to_string();
 
-    assert_eq!(&s[0..0], "");
-    assert_eq!(&s[1..1], "");
-    assert_eq!(&s[1..], "");
-    assert_eq!(&s[..0], "");
+        assert_eq!(&g[range.clone()], &oracle[range]);
+    }
 }
 
 // ---------------------------------------------------------------------------
-// Unicode
+// Invalid ranges
 //
-// Indexing str is byte-based, not character-based.
+// The important property here is that GString panics for exactly the same
+// kinds of ranges as str.
 //
-// "héllo 🌍"
-//   h  = byte 0
-//   é  = bytes 1..3
-//   l  = byte 3
-//   l  = byte 4
-//   o  = byte 5
-//   ' '= byte 6
-//   🌍 = bytes 7..11
-// ---------------------------------------------------------------------------
-
-#[test]
-fn index_unicode() {
-    let s = gstring("héllo 🌍");
-
-    assert_eq!(&s[0..1], "h");
-    assert_eq!(&s[1..3], "é");
-    assert_eq!(&s[3..6], "llo");
-    assert_eq!(&s[0..6], "héllo");
-    assert_eq!(&s[7..11], "🌍");
-    assert_eq!(&s[0..11], "héllo 🌍");
-}
-
-#[test]
-fn index_unicode_from() {
-    let s = gstring("héllo 🌍");
-
-    assert_eq!(&s[0..], "héllo 🌍");
-    assert_eq!(&s[1..], "éllo 🌍");
-    assert_eq!(&s[3..], "llo 🌍");
-    assert_eq!(&s[7..], "🌍");
-    assert_eq!(&s[11..], "");
-}
-
-#[test]
-fn index_unicode_to() {
-    let s = gstring("héllo 🌍");
-
-    assert_eq!(&s[..0], "");
-    assert_eq!(&s[..1], "h");
-    assert_eq!(&s[..3], "hé");
-    assert_eq!(&s[..6], "héllo");
-    assert_eq!(&s[..11], "héllo 🌍");
-}
-
-#[test]
-fn index_unicode_inclusive() {
-    let s = gstring("héllo 🌍");
-
-    assert_eq!(&s[0..=0], "h");
-    assert_eq!(&s[1..=2], "é");
-    assert_eq!(&s[3..=5], "llo");
-    assert_eq!(&s[7..=10], "🌍");
-}
-
-#[test]
-fn index_unicode_to_inclusive() {
-    let s = gstring("héllo 🌍");
-
-    assert_eq!(&s[..=0], "h");
-    assert_eq!(&s[..=2], "hé");
-    assert_eq!(&s[..=5], "héllo");
-    assert_eq!(&s[..=10], "héllo 🌍");
-}
-
-// ---------------------------------------------------------------------------
-// ASCII-only GString
-//
-// Make sure Index works independently of the ASCII_ONLY const parameter.
-// ---------------------------------------------------------------------------
-
-#[test]
-fn index_ascii_only_gstring() {
-    let s = gstring_ascii("hello world");
-
-    assert_eq!(&s[..5], "hello");
-    assert_eq!(&s[6..], "world");
-    assert_eq!(&s[1..=4], "ello");
-    assert_eq!(&s[..], "hello world");
-}
-
-// ---------------------------------------------------------------------------
-// Boundary behavior
-//
-// These are delegated to str's indexing implementation and should panic.
+// We don't need to compare the panic itself; these ranges are deliberately
+// invalid for both implementations.
 // ---------------------------------------------------------------------------
 
 #[test]
 #[should_panic]
 fn index_range_out_of_bounds() {
-    let s = gstring("hello");
-
-    let _ = &s[0..6];
+    let g = gstring("hello");
+    let _ = &g[0..6];
 }
 
 #[test]
 #[should_panic]
 fn index_range_from_out_of_bounds() {
-    let s = gstring("hello");
-
-    let _ = &s[6..];
+    let g = gstring("hello");
+    let _ = &g[6..];
 }
 
 #[test]
 #[should_panic]
 fn index_range_to_out_of_bounds() {
-    let s = gstring("hello");
-
-    let _ = &s[..6];
+    let g = gstring("hello");
+    let _ = &g[..6];
 }
 
 #[test]
 #[should_panic]
 fn index_range_inclusive_out_of_bounds() {
-    let s = gstring("hello");
-
-    let _ = &s[0..=5];
+    let g = gstring("hello");
+    let _ = &g[0..=5];
 }
 
 #[test]
 #[should_panic]
 fn index_range_to_inclusive_out_of_bounds() {
-    let s = gstring("hello");
+    let g = gstring("hello");
+    let _ = &g[..=5];
+}
 
-    let _ = &s[..=5];
+// ---------------------------------------------------------------------------
+// Invalid UTF-8 boundaries
+// ---------------------------------------------------------------------------
+
+#[test]
+#[should_panic]
+fn index_range_starts_inside_unicode_character() {
+    let g = gstring("héllo");
+    let _ = &g[2..];
+}
+
+#[test]
+#[should_panic]
+fn index_range_ends_inside_unicode_character() {
+    let g = gstring("héllo");
+    let _ = &g[..2];
+}
+
+#[test]
+#[should_panic]
+fn index_range_splits_unicode_character() {
+    let g = gstring("héllo");
+    let _ = &g[1..2];
+}
+
+#[test]
+#[should_panic]
+fn index_range_inclusive_splits_unicode_character() {
+    let g = gstring("héllo");
+    let _ = &g[1..=1];
+}
+
+#[test]
+#[should_panic]
+fn index_range_to_inclusive_splits_unicode_character() {
+    let g = gstring("héllo");
+    let _ = &g[..=1];
 }
 
 // ---------------------------------------------------------------------------
@@ -320,64 +301,13 @@ fn index_range_to_inclusive_out_of_bounds() {
 #[test]
 #[should_panic]
 fn index_range_start_after_end() {
-    let s = gstring("hello");
-
-    let _ = &s[4..2];
+    let g = gstring("hello");
+    let _ = &g[4..2];
 }
 
 #[test]
 #[should_panic]
 fn index_range_inclusive_start_after_end() {
-    let s = gstring("hello");
-
-    let _ = &s[4..=2];
-}
-
-// ---------------------------------------------------------------------------
-// Invalid UTF-8 boundaries
-//
-// These are valid byte positions in the string, but they split a UTF-8
-// codepoint. str indexing must panic.
-//
-// "é" occupies bytes 0..2, so byte index 1 is NOT a character boundary.
-// ---------------------------------------------------------------------------
-
-#[test]
-#[should_panic]
-fn index_range_starts_inside_unicode_character() {
-    let s = gstring("héllo");
-
-    let _ = &s[2..];
-}
-
-#[test]
-#[should_panic]
-fn index_range_ends_inside_unicode_character() {
-    let s = gstring("héllo");
-
-    let _ = &s[..2];
-}
-
-#[test]
-#[should_panic]
-fn index_range_splits_unicode_character() {
-    let s = gstring("héllo");
-
-    let _ = &s[1..2];
-}
-
-#[test]
-#[should_panic]
-fn index_range_inclusive_splits_unicode_character() {
-    let s = gstring("héllo");
-
-    let _ = &s[1..=1];
-}
-
-#[test]
-#[should_panic]
-fn index_range_to_inclusive_splits_unicode_character() {
-    let s = gstring("héllo");
-
-    let _ = &s[..=1];
+    let g = gstring("hello");
+    let _ = &g[4..=2];
 }
